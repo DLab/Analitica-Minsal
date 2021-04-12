@@ -69,6 +69,15 @@ fig.add_trace(
               )
 )
 fig.add_trace(
+    go.Scatter(x=casos_nuevos.index,
+               y=casos_nuevos['Chile'].rolling(11).sum().shift(-6),
+               mode='lines',
+               name='Inferencia de activos (DP3) (shift-6)',
+               line_color=Wong[5],
+               visible='legendonly',
+              )
+)
+fig.add_trace(
     go.Scatter(x=activos_dp19.index,
                y=activos_dp19,
                mode='lines',

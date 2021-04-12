@@ -1,0 +1,56 @@
+name: Update_plots
+  
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
+on:
+  # github runners are on GMT
+    schedule:
+      - cron:  '0 0 * * *'
+    workflow_dispatch:
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+
+  # This workflow contains a single job called "build"
+  Update_plots:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v2
+      with:
+          ref: main
+
+
+      # Sets up python
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v1
+      with:
+          python-version: 3.9
+
+    # Runs a set of commands using the runners shell
+    - name: Install dependencies
+      run: |
+        date
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: Updating Plots 
+      run: |
+          python src/EfectoVac.py
+          python src/CasosActivos.py
+    - uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        commit_message: "Update HTML plots"
+
+        # Optional glob pattern of files which should be added to the commit
+        file_pattern: output/*.html
+
+        # Optional local file path to the repository
+        repository: .
+
+        # Optional commit user and author settings
+        commit_user_name: GitHub Actions Bot
+        commit_user_email: actions@github.com
+        commit_author: Github bot <actions@github.com>

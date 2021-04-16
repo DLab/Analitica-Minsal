@@ -142,8 +142,20 @@ fig.add_trace(
     go.Scatter(x=propuci.index,
                y=propuci.rolling(7).mean(),
                mode='lines',
-               name='UCI / Activos',
+               name='UCI (shift-14) / Activos',
                line_color=Wong[0]
+              )
+    , row=2, col=1, secondary_y=False,
+)
+propuci_nolag = casos_uci['Chile']/casos_sintomaticos['Chile'].rolling(11).sum()
+fig.add_trace(
+    go.Scatter(x=propuci_nolag.index,
+               y=propuci_nolag.rolling(7).mean(),
+               mode='lines',
+               name='UCI / Activos',
+               line_color=Wong[4],
+               visible='legendonly'
+
               )
     , row=2, col=1, secondary_y=False,
 )

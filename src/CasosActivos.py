@@ -111,7 +111,7 @@ fig.write_html(f'{outputdir}/Casos_Activos.html')
 fig = make_subplots(rows=2, shared_xaxes=True, specs=[[{"secondary_y": True}],[{"secondary_y": True}],], row_heights=[0.7, 0.3])
 fig.add_trace(
     go.Scatter(x=casos_sintomaticos.index,
-               y=casos_sintomaticos['Chile'].rolling(11).sum(),
+               y=casos_sintomaticos['Chile'].rolling(11).sum().rolling(7).mean(),
                mode='lines',
                name='Inferencia de activos (DP3)',
                line_color=Wong[1]
@@ -127,22 +127,37 @@ fig.add_trace(
               )
     , row=1, col=1, secondary_y=True,
 )
+ucilag = 14
+propuci = casos_uci['Chile'].shift(-ucilag)/casos_sintomaticos['Chile'].rolling(11).sum()
+prediccion_uci = casos_sintomaticos['Chile'].rolling(11).sum().rolling(7).mean()*0.066
+
+prediccion_uci.index = prediccion_uci.index + pd.Timedelta(days=ucilag)
+print(prediccion_uci)
 fig.add_trace(
-    go.Scatter(x=casos_uci.shift(-14).index,
-               y=casos_uci['Chile'].shift(-14),
+    go.Scatter(x=prediccion_uci.index,
+               y=prediccion_uci,
                mode='lines',
-               name='Ocupación UCI (shift-14)',
+               name='Ocupación UCI (predicción)',
+               line_color=Wong[6],
+               visible='legendonly'
+              )
+    , row=1, col=1, secondary_y=True,
+)
+fig.add_trace(
+    go.Scatter(x=casos_uci.shift(-ucilag).index,
+               y=casos_uci['Chile'].shift(-ucilag),
+               mode='lines',
+               name=f'Ocupación UCI (shift-{ucilag})',
                line_color=Wong[3],
                visible='legendonly'
               )
     , row=1, col=1, secondary_y=True,
 )
-propuci = casos_uci['Chile'].shift(-14)/casos_sintomaticos['Chile'].rolling(11).sum()
 fig.add_trace(
     go.Scatter(x=propuci.index,
                y=propuci.rolling(7).mean(),
                mode='lines',
-               name='UCI (shift-14) / Activos',
+               name=f'UCI (shift-{ucilag}) / Activos',
                line_color=Wong[0]
               )
     , row=2, col=1, secondary_y=False,

@@ -84,7 +84,7 @@ pl_casos.update_traces(
     ])
 )
 pl_casos.update_layout(template='plotly_white')
-pl_casos.update_layout(yaxis_tickformat = ',')
+pl_casos.update_layout(yaxis_tickformat = ',.0f')
 pl_casos.write_html(f'{outputdir}/casos_nuevos_por_edad.html')
 
 pl_casos_p = px.area((casos_m_edadesUCI_T.div(casos_m_edadesUCI_T.sum())*100).T.rolling(7).mean(), x=casos_m_edadesUCI.index, y=casos_m_edadesUCI.columns,
@@ -104,7 +104,7 @@ pl_casos_p.update_traces(
     ])
 )
 pl_casos_p.update_layout(template='plotly_white')
-pl_casos_p.update_layout(yaxis_tickformat = ',')
+pl_casos_p.update_layout(yaxis_tickformat = ',.0f')
 
 pl_casos_p.write_html(f'{outputdir}/casos_nuevos_por_edad_prop_stacked.html')
 
@@ -145,7 +145,7 @@ casos_vs_prom.update_traces(
     ])
 )
 casos_vs_prom.update_layout(template='plotly_white')
-casos_vs_prom.update_layout(yaxis_tickformat = ',')
+casos_vs_prom.update_layout(yaxis_tickformat = ',.1f')
 
 casos_vs_prom.write_html(f'{outputdir}/casos_vs_prom.html')
 
@@ -172,7 +172,7 @@ casos_vs_prom_all.update_traces(
     ])
 )
 casos_vs_prom_all.update_layout(template='plotly_white')
-casos_vs_prom_all.update_layout(yaxis_tickformat = ',')
+casos_vs_prom_all.update_layout(yaxis_tickformat = ',.1f')
 
 casos_vs_prom_all.write_html(f'{outputdir}/casos_vs_prom_todas_las_edades.html')
 
@@ -193,7 +193,7 @@ pl_UCI.update_traces(
     ])
 )
 pl_UCI.update_layout(template='plotly_white')
-pl_UCI.update_layout(yaxis_tickformat = ',')
+pl_UCI.update_layout(yaxis_tickformat = ',.0f')
 
 pl_UCI.write_html(f'{outputdir}/ocupacion_UCI_por_edad.html')
 
@@ -213,10 +213,10 @@ pl_UCI_p.update_traces(
         "%{y:.1f}%",
     ])
 )
-pl_UCI.update_layout(template='plotly_white')
-pl_UCI.update_layout(yaxis_tickformat = ',')
+pl_UCI_p.update_layout(template='plotly_white')
+pl_UCI_p.update_layout(yaxis_tickformat = ',.0f')
 
-pl_UCI.write_html(f'{outputdir}/ocupacion_UCI_por_edad_prop_stacked.html')
+pl_UCI_p.write_html(f'{outputdir}/ocupacion_UCI_por_edad_prop_stacked.html')
 
 uci_p = (uci_T.div(uci_T.sum())*100).T
 uci_p_prom = uci_p.expanding().mean()
@@ -264,7 +264,7 @@ uci_vs_prom.update_traces(
     ])
 )
 uci_vs_prom.update_layout(template='plotly_white')
-uci_vs_prom.update_layout(yaxis_tickformat = ',')
+uci_vs_prom.update_layout(yaxis_tickformat = ',.1f')
 
 uci_vs_prom.write_html(f'{outputdir}/uci_vs_prom.html')
 
@@ -285,7 +285,7 @@ pl_muertes.update_traces(
     ])
 )
 pl_muertes.update_layout(template='plotly_white')
-pl_muertes.update_layout(yaxis_tickformat = ',')
+pl_muertes.update_layout(yaxis_tickformat = ',.0f')
 
 pl_muertes.write_html(f'{outputdir}/fallecidos_nuevos_por_edad.html')
 
@@ -306,7 +306,7 @@ pl_muertes_p.update_traces(
     ])
 )
 pl_muertes_p.update_layout(template='plotly_white')
-pl_muertes_p.update_layout(yaxis_tickformat = ',')
+pl_muertes_p.update_layout(yaxis_tickformat = ',.0f')
 
 pl_muertes_p.write_html(f'{outputdir}/fallecidos_nuevos_por_edad_prop_stacked.html')
 
@@ -357,7 +357,7 @@ muertes_vs_prom.update_traces(
     ])
 )
 muertes_vs_prom.update_layout(template='plotly_white')
-muertes_vs_prom.update_layout(yaxis_tickformat = ',')
+muertes_vs_prom.update_layout(yaxis_tickformat = ',.1f')
 
 muertes_vs_prom.write_html(f'{outputdir}/fallecidos_vs_prom.html')
 
@@ -456,6 +456,6 @@ pl_vac_tot.update_traces(
     ])
 )
 pl_vac_tot.update_layout(template='plotly_white')
-pl_vac_tot.update_layout(yaxis_tickformat = ',')
+pl_vac_tot.update_layout(yaxis_tickformat = ',.1f')
 
 pl_vac_tot.write_html(f'{outputdir}/vacunacion_total.html')

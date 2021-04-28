@@ -59,4 +59,5 @@ fig.update_layout(
         size=14,
     )
 )
+fig.update_yaxes(rangemode='tozero')
 fig.write_html(f'{outputdir}/Positividad_PD49.html')

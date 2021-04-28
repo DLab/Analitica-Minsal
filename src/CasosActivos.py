@@ -14,10 +14,16 @@ casos_sintomaticos = casos[casos['Categoria']=='Casos nuevos con sintomas'].pivo
 casos_nuevos = casos[casos['Categoria']=='Casos nuevos totales'].pivot(index='Fecha', columns='Region', values='Total')
 casos_activos_conf = casos[casos['Categoria']=='Casos activos confirmados'].pivot(index='Fecha', columns='Region', values='Total')
 casos_activos_prob = casos[casos['Categoria']=='Casos activos probables'].pivot(index='Fecha', columns='Region', values='Total')
+casos_nuevos_prob = casos[casos['Categoria']=='Casos probables acumulados'].pivot(index='Fecha', columns='Region', values='Total').diff()
+casos_nuevos_antigeno = casos[casos['Categoria']=='Casos nuevos confirmados por antigeno'].pivot(index='Fecha', columns='Region', values='Total')
 casos_sintomaticos.rename(columns={'Total': 'Chile'}, inplace=True)
 casos_nuevos.rename(columns={'Total': 'Chile'}, inplace=True)
 casos_activos_conf.rename(columns={'Total': 'Chile'}, inplace=True)
 casos_activos_prob.rename(columns={'Total': 'Chile'}, inplace=True)
+casos_nuevos_prob.rename(columns={'Total': 'Chile'}, inplace=True)
+casos_nuevos_antigeno.rename(columns={'Total': 'Chile'}, inplace=True)
+casos_nuevos_prob_antigeno = casos_nuevos.add(casos_nuevos_prob, fill_value=0)
+casos_nuevos_prob_antigeno = casos_nuevos_prob_antigeno.add(casos_nuevos_antigeno, fill_value=0)
 datos_regiones = pd.read_csv('https://raw.githubusercontent.com/ivanMSC/COVID19_Chile/master/utils/regionesChile.csv')
 casos_activos = pd.read_csv('https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto46/activos_vs_recuperados.csv')
 casos_activos.rename(columns={
@@ -78,6 +84,15 @@ fig.add_trace(
               )
 )
 fig.add_trace(
+    go.Scatter(x=casos_nuevos_prob_antigeno.index,
+               y=casos_nuevos_prob_antigeno['Chile'].rolling(11).sum(),
+               mode='lines',
+               name='Inferencia de activos (PRC + Probables + Antígeno) (DP3)',
+               line_color=Wong[6],
+               visible='legendonly',
+              )
+)
+fig.add_trace(
     go.Scatter(x=activos_dp19.index,
                y=activos_dp19,
                mode='lines',
@@ -129,6 +144,7 @@ fig.add_trace(
 )
 ucilag = 14
 propuci = casos_uci['Chile'].shift(-ucilag)/casos_sintomaticos['Chile'].rolling(11).sum()
+propuci_toto = casos_uci['Chile'].shift(-ucilag)/casos_nuevos_prob_antigeno['Chile'].rolling(11).sum()
 prediccion_uci = casos_sintomaticos['Chile'].rolling(11).sum().rolling(7).mean()*0.066
 
 prediccion_uci.index = prediccion_uci.index + pd.Timedelta(days=ucilag)
@@ -169,6 +185,17 @@ fig.add_trace(
                mode='lines',
                name='UCI / Activos',
                line_color=Wong[4],
+               visible='legendonly'
+
+              )
+    , row=2, col=1, secondary_y=False,
+)
+fig.add_trace(
+    go.Scatter(x=propuci_toto.index,
+               y=propuci_toto.rolling(7).mean(),
+               mode='lines',
+               name='UCI / Activos (PCR + Probable + Antígeno)',
+               line_color=Wong[7],
                visible='legendonly'
 
               )

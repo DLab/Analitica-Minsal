@@ -40,6 +40,7 @@ jobs:
       run: |
           python src/EfectoVac.py
           python src/CasosActivos.py
+          python src/Positividad_PD49.py
     - uses: stefanzweifel/git-auto-commit-action@v4
       with:
         commit_message: "Update HTML plots"

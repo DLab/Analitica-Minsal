@@ -87,7 +87,7 @@ fig.add_trace(
     go.Scatter(x=casos_nuevos_prob_antigeno.index,
                y=casos_nuevos_prob_antigeno['Chile'].rolling(11).sum(),
                mode='lines',
-               name='Inferencia de activos (PRC + Probables + Antígeno) (DP3)',
+               name='Inferencia de activos (PCR + Probables + Antígeno) (DP3)',
                line_color=Wong[6],
                visible='legendonly',
               )
@@ -120,6 +120,11 @@ fig.update_layout(hovermode='x')
 fig.update_layout(template='plotly_white',
                   title='Casos Activos de COVID19 en Chile')
 fig.update_layout(yaxis_tickformat = ',')
+fig.update_layout(
+    font=dict(
+        size=14,
+    )
+)
 
 fig.write_html(f'{outputdir}/Casos_Activos.html')
 
@@ -137,7 +142,7 @@ fig.add_trace(
     go.Scatter(x=casos_uci.index,
                y=casos_uci['Chile'],
                mode='lines',
-               name='Ocupación UCI',
+               name='Ocupación UCI (DP8)',
                line_color=Wong[2]
               )
     , row=1, col=1, secondary_y=True,
@@ -146,15 +151,26 @@ ucilag = 14
 propuci = casos_uci['Chile'].shift(-ucilag)/casos_sintomaticos['Chile'].rolling(11).sum()
 propuci_toto = casos_uci['Chile'].shift(-ucilag)/casos_nuevos_prob_antigeno['Chile'].rolling(11).sum()
 prediccion_uci = casos_sintomaticos['Chile'].rolling(11).sum().rolling(7).mean()*0.066
+prediccion_uci_toto = casos_nuevos_prob_antigeno['Chile'].rolling(11).sum().rolling(7).mean()*0.03771422787573839
 
 prediccion_uci.index = prediccion_uci.index + pd.Timedelta(days=ucilag)
-print(prediccion_uci)
+prediccion_uci_toto.index = prediccion_uci_toto.index + pd.Timedelta(days=ucilag)
 fig.add_trace(
     go.Scatter(x=prediccion_uci.index,
                y=prediccion_uci,
                mode='lines',
-               name='Ocupación UCI (predicción)',
+               name='Ocupación UCI (predicción desde activos sintomaticos)',
                line_color=Wong[6],
+               visible='legendonly'
+              )
+    , row=1, col=1, secondary_y=True,
+)
+fig.add_trace(
+    go.Scatter(x=prediccion_uci_toto.index,
+               y=prediccion_uci_toto,
+               mode='lines',
+               name='Ocupación UCI (predicción desde total de activos)',
+               line_color=Wong[7],
                visible='legendonly'
               )
     , row=1, col=1, secondary_y=True,
@@ -207,7 +223,13 @@ fig.update_layout(yaxis3_tickformat = '.1%')
 fig.update_layout(yaxis1_tickformat = ',.0f')
 fig.update_layout(yaxis2_tickformat = ',.0f')
 fig.update_layout(template='plotly_white',
-                  title='Incidencia del número de infectados activos sintomáticos en la utilización de UCIs')
+                  title='Incidencia del número de infectados activos en la utilización de UCIs')
+fig.update_layout(
+    font=dict(
+        size=14,
+    )
+)
+
 fig.update_yaxes(row=1, col=1, title_text='Casos activos')
 fig.update_yaxes(row=1, col=1, title_text='Ocupación UCI', secondary_y=True)
 fig.update_yaxes(row=2, col=1, title_text='UCI / Activos')

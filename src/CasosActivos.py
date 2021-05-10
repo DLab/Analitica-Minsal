@@ -147,7 +147,7 @@ fig.add_trace(
               )
     , row=1, col=1, secondary_y=True,
 )
-ucilag = 14
+ucilag = 10
 propuci = casos_uci['Chile'].shift(-ucilag)/casos_sintomaticos['Chile'].rolling(11).sum()
 propuci_toto = casos_uci['Chile'].shift(-ucilag)/casos_nuevos_prob_antigeno['Chile'].rolling(11).sum()
 prediccion_uci = casos_sintomaticos['Chile'].rolling(11).sum().rolling(7).mean()*0.066

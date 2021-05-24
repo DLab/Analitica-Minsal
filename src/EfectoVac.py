@@ -489,7 +489,7 @@ pl_vac_tot.append_trace(go.Scatter(
 ), row=5, col=1)
 
 
-pl_vac_tot.update_layout(title_text="Media móvil 7d de la proporción de vacunados en Chile con la primera dosis (Producto 78)")
+pl_vac_tot.update_layout(title_text="Media móvil 7d de la proporción de vacunados en Chile (Producto 78)")
 pl_vac_tot.update_yaxes(range=[0,100],)
 pl_vac_tot.update_layout(hovermode='x')
 # pl_vac_1.add_hline(y=1)
@@ -508,3 +508,105 @@ pl_vac_tot.update_layout(
 )
 
 pl_vac_tot.write_html(f'{outputdir}/vacunacion_total.html')
+
+#Vacunas numero
+dosis1 = pd.read_csv('https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto78/vacunados_edad_fecha_1eraDosis_T.csv', index_col=0)
+dosis2 = pd.read_csv('https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto78/vacunados_edad_fecha_2daDosis_T.csv', index_col=0)
+dosis1.fillna(0, inplace=True)
+dosis2.fillna(0, inplace=True)
+dosis1['>=70'] = dosis1[dosis1.columns[52:]].sum(axis=1)
+dosis1['60-69'] = dosis1[dosis1.columns[42:52]].sum(axis=1)
+dosis1['50-59'] = dosis1[dosis1.columns[32:42]].sum(axis=1)
+dosis1['40-49'] = dosis1[dosis1.columns[22:32]].sum(axis=1)
+dosis1['<=39'] = dosis1[dosis1.columns[:22]].sum(axis=1)
+dosis2['>=70'] = dosis2[dosis2.columns[52:]].sum(axis=1)
+dosis2['60-69'] = dosis2[dosis2.columns[42:52]].sum(axis=1)
+dosis2['50-59'] = dosis2[dosis2.columns[32:42]].sum(axis=1)
+dosis2['40-49'] = dosis2[dosis2.columns[22:32]].sum(axis=1)
+dosis2['<=39'] = dosis2[dosis2.columns[:22]].sum(axis=1)
+
+# dosis1['>=70'] = dosis1['>=70']/piramide_chile['>=70']*100
+# dosis2['>=70'] = dosis2['>=70']/piramide_chile['>=70']*100
+# dosis1['60-69'] = dosis1['60-69']/piramide_chile['60-69']*100
+# dosis2['60-69'] = dosis2['60-69']/piramide_chile['60-69']*100
+# dosis1['50-59'] = dosis1['50-59']/piramide_chile['50-59']*100
+# dosis2['50-59'] = dosis2['50-59']/piramide_chile['50-59']*100
+# dosis1['40-49'] = dosis1['40-49']/piramide_chile['40-49']*100
+# dosis2['40-49'] = dosis2['40-49']/piramide_chile['40-49']*100
+# dosis1['<=39'] = dosis1['<=39']/piramide_chile['<=39']*100
+# dosis2['<=39'] = dosis2['<=39']/piramide_chile['<=39']*100
+pl_vac_tot = make_subplots(rows=5, cols=1, shared_xaxes=True,)
+
+pl_vac_tot.append_trace(go.Scatter(
+    x=dosis1.index,
+    y=dosis1['>=70'].rolling(7).mean(), name='Primera dosis >=70'
+), row=1, col=1)
+pl_vac_tot.append_trace(go.Scatter(
+    x=dosis1.index,
+    y=dosis1['60-69'].rolling(7).mean(), name='Primera dosis 60-69'
+), row=2, col=1)
+pl_vac_tot.append_trace(go.Scatter(
+    x=dosis1.index,
+    y=dosis1['50-59'].rolling(7).mean(), name='Primera dosis 50-59'
+), row=3, col=1)
+pl_vac_tot.append_trace(go.Scatter(
+    x=dosis1.index,
+    y=dosis1['40-49'].rolling(7).mean(), name='Primera dosis 40-49'
+), row=4, col=1)
+pl_vac_tot.append_trace(go.Scatter(
+    x=dosis1.index,
+    y=dosis1['<=39'].rolling(7).mean(), name='Primera dosis <=39'
+), row=5, col=1)
+
+
+pl_vac_tot.append_trace(go.Scatter(
+    x=dosis2.index,
+    y=dosis2['>=70'].rolling(7).mean(), name='Segunda dosis >=70',
+    line=dict(dash='dash')
+), row=1, col=1)
+pl_vac_tot.append_trace(go.Scatter(
+    x=dosis2.index,
+    y=dosis2['60-69'].rolling(7).mean(), name='Segunda dosis 60-69',
+    line=dict(dash='dash')
+), row=2, col=1)
+pl_vac_tot.append_trace(go.Scatter(
+    x=dosis2.index,
+    y=dosis2['50-59'].rolling(7).mean(), name='Segunda dosis 50-59',
+    line=dict(dash='dash')
+), row=3, col=1)
+pl_vac_tot.append_trace(go.Scatter(
+    x=dosis2.index,
+    y=dosis2['40-49'].rolling(7).mean(), name='Segunda dosis 40-49',
+    line=dict(dash='dash')
+), row=4, col=1)
+pl_vac_tot.append_trace(go.Scatter(
+    x=dosis2.index,
+    y=dosis2['<=39'].rolling(7).mean(), name='Segunda dosis <=39',
+    line=dict(dash='dash')
+), row=5, col=1)
+
+
+pl_vac_tot.update_layout(title_text="Media móvil 7d de cantidad de vacunados diarios en Chile (Producto 78)")
+pl_vac_tot.update_yaxes(range=[0,120000],)
+pl_vac_tot.update_layout(hovermode='x')
+# pl_vac_1.add_hline(y=1)
+pl_vac_tot.update_traces(
+    hovertemplate="<br>".join([
+#         "Día: %{x}",
+        "%{y:,.0f}",
+    ])
+)
+pl_vac_tot.update_layout(template='plotly_white')
+pl_vac_tot.update_layout(yaxis1_tickformat = ',.0f')
+pl_vac_tot.update_layout(yaxis2_tickformat = ',.0f')
+pl_vac_tot.update_layout(yaxis3_tickformat = ',.0f')
+pl_vac_tot.update_layout(yaxis4_tickformat = ',.0f')
+pl_vac_tot.update_layout(yaxis5_tickformat = ',.0f')
+
+pl_vac_tot.update_layout(
+    font=dict(
+        size=14,
+    )
+)
+
+pl_vac_tot.write_html(f'{outputdir}/vacunacion_diario.html')

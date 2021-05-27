@@ -406,12 +406,12 @@ muertes_vs_prom.update_layout(
 muertes_vs_prom.write_html(f'{outputdir}/fallecidos_vs_prom.html')
 
 #Vacunas
-piramide_chile = {
-    '>=70': 1473727,
-    '60-69': 1737346,
-    '50-59': 2328585,
-    '40-49': 2556775,
-    '<=39': 10855602,
+piramide_chile = { # https://www.populationpyramid.net/es/chile/2020/
+    '>=70': 1530847,
+    '60-69': 1791786,
+    '50-59': 2352271,
+    '40-49': 2578404,
+    '<=39': 7185184, # 15-39
 }
 dosis1 = pd.read_csv('https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto78/vacunados_edad_fecha_1eraDosis_T.csv', index_col=0)
 dosis2 = pd.read_csv('https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto78/vacunados_edad_fecha_2daDosis_T.csv', index_col=0)

@@ -90,6 +90,15 @@ pl_casos.update_layout(
         size=14,
     )
 )
+pl_casos.add_layout_image(
+    dict(
+        source="https://i2.wp.com/dlab.cl/wp-content/uploads/2016/08/LogoWebDlab.png",
+        xref="paper", yref="paper",
+        x=1, y=1.05,
+        sizex=0.2, sizey=0.2,
+        xanchor="right", yanchor="bottom"
+    )
+)
 
 pl_casos.write_html(f'{outputdir}/casos_nuevos_por_edad.html')
 
@@ -114,6 +123,15 @@ pl_casos_p.update_layout(yaxis_tickformat = ',.0f')
 pl_casos_p.update_layout(
     font=dict(
         size=14,
+    )
+)
+pl_casos_p.add_layout_image(
+    dict(
+        source="https://i2.wp.com/dlab.cl/wp-content/uploads/2016/08/LogoWebDlab.png",
+        xref="paper", yref="paper",
+        x=1, y=1.05,
+        sizex=0.2, sizey=0.2,
+        xanchor="right", yanchor="bottom"
     )
 )
 
@@ -162,6 +180,15 @@ casos_vs_prom.update_layout(
         size=14,
     )
 )
+casos_vs_prom.add_layout_image(
+    dict(
+        source="https://i2.wp.com/dlab.cl/wp-content/uploads/2016/08/LogoWebDlab.png",
+        xref="paper", yref="paper",
+        x=1, y=1.05,
+        sizex=0.2, sizey=0.2,
+        xanchor="right", yanchor="bottom"
+    )
+)
 
 casos_vs_prom.write_html(f'{outputdir}/casos_vs_prom.html')
 
@@ -189,6 +216,15 @@ casos_vs_prom_all.update_traces(
 )
 casos_vs_prom_all.update_layout(template='plotly_white')
 casos_vs_prom_all.update_layout(yaxis_tickformat = ',.1f')
+casos_vs_prom_all.add_layout_image(
+    dict(
+        source="https://i2.wp.com/dlab.cl/wp-content/uploads/2016/08/LogoWebDlab.png",
+        xref="paper", yref="paper",
+        x=1, y=1.05,
+        sizex=0.2, sizey=0.2,
+        xanchor="right", yanchor="bottom"
+    )
+)
 
 casos_vs_prom_all.write_html(f'{outputdir}/casos_vs_prom_todas_las_edades.html')
 
@@ -215,7 +251,15 @@ pl_UCI.update_layout(
         size=14,
     )
 )
-
+pl_UCI.add_layout_image(
+    dict(
+        source="https://i2.wp.com/dlab.cl/wp-content/uploads/2016/08/LogoWebDlab.png",
+        xref="paper", yref="paper",
+        x=1, y=1.05,
+        sizex=0.2, sizey=0.2,
+        xanchor="right", yanchor="bottom"
+    )
+)
 pl_UCI.write_html(f'{outputdir}/ocupacion_UCI_por_edad.html')
 
 pl_UCI_p = px.area((uci_T.div(uci_T.sum())*100).T.rolling(7).mean(), x=uci.index, y=uci.columns,
@@ -239,6 +283,15 @@ pl_UCI_p.update_layout(yaxis_tickformat = ',.0f')
 pl_UCI_p.update_layout(
     font=dict(
         size=14,
+    )
+)
+pl_UCI_p.add_layout_image(
+    dict(
+        source="https://i2.wp.com/dlab.cl/wp-content/uploads/2016/08/LogoWebDlab.png",
+        xref="paper", yref="paper",
+        x=1, y=1.05,
+        sizex=0.2, sizey=0.2,
+        xanchor="right", yanchor="bottom"
     )
 )
 
@@ -296,6 +349,16 @@ uci_vs_prom.update_layout(
         size=14,
     )
 )
+uci_vs_prom.add_layout_image(
+    dict(
+        source="https://i2.wp.com/dlab.cl/wp-content/uploads/2016/08/LogoWebDlab.png",
+        xref="paper", yref="paper",
+        x=1, y=1.05,
+        sizex=0.2, sizey=0.2,
+        xanchor="right", yanchor="bottom"
+    )
+)
+
 uci_vs_prom.write_html(f'{outputdir}/uci_vs_prom.html')
 
 pl_muertes = px.area(muertes.rolling(14).mean(), x=muertes.index, y=uci.columns,
@@ -319,6 +382,15 @@ pl_muertes.update_layout(yaxis_tickformat = ',.0f')
 pl_muertes.update_layout(
     font=dict(
         size=14,
+    )
+)
+pl_muertes.add_layout_image(
+    dict(
+        source="https://i2.wp.com/dlab.cl/wp-content/uploads/2016/08/LogoWebDlab.png",
+        xref="paper", yref="paper",
+        x=1, y=1.05,
+        sizex=0.2, sizey=0.2,
+        xanchor="right", yanchor="bottom"
     )
 )
 
@@ -345,6 +417,15 @@ pl_muertes_p.update_layout(yaxis_tickformat = ',.0f')
 pl_muertes_p.update_layout(
     font=dict(
         size=14,
+    )
+)
+pl_muertes_p.add_layout_image(
+    dict(
+        source="https://i2.wp.com/dlab.cl/wp-content/uploads/2016/08/LogoWebDlab.png",
+        xref="paper", yref="paper",
+        x=1, y=1.05,
+        sizex=0.2, sizey=0.2,
+        xanchor="right", yanchor="bottom"
     )
 )
 
@@ -403,6 +484,16 @@ muertes_vs_prom.update_layout(
         size=14,
     )
 )
+muertes_vs_prom.add_layout_image(
+    dict(
+        source="https://i2.wp.com/dlab.cl/wp-content/uploads/2016/08/LogoWebDlab.png",
+        xref="paper", yref="paper",
+        x=1, y=1.05,
+        sizex=0.2, sizey=0.2,
+        xanchor="right", yanchor="bottom"
+    )
+)
+
 muertes_vs_prom.write_html(f'{outputdir}/fallecidos_vs_prom.html')
 
 #Vacunas
@@ -506,7 +597,15 @@ pl_vac_tot.update_layout(
         size=14,
     )
 )
-
+pl_vac_tot.add_layout_image(
+    dict(
+        source="https://i2.wp.com/dlab.cl/wp-content/uploads/2016/08/LogoWebDlab.png",
+        xref="paper", yref="paper",
+        x=1, y=1.05,
+        sizex=0.2, sizey=0.2,
+        xanchor="right", yanchor="bottom"
+    )
+)
 pl_vac_tot.write_html(f'{outputdir}/vacunacion_total.html')
 
 #Vacunas numero
@@ -606,6 +705,15 @@ pl_vac_tot.update_layout(yaxis5_tickformat = ',.0f')
 pl_vac_tot.update_layout(
     font=dict(
         size=14,
+    )
+)
+pl_vac_tot.add_layout_image(
+    dict(
+        source="https://i2.wp.com/dlab.cl/wp-content/uploads/2016/08/LogoWebDlab.png",
+        xref="paper", yref="paper",
+        x=1, y=1.05,
+        sizex=0.2, sizey=0.2,
+        xanchor="right", yanchor="bottom"
     )
 )
 

@@ -60,4 +60,14 @@ fig.update_layout(
     )
 )
 fig.update_yaxes(rangemode='tozero')
+fig.add_layout_image(
+    dict(
+        source="https://i2.wp.com/dlab.cl/wp-content/uploads/2016/08/LogoWebDlab.png",
+        xref="paper", yref="paper",
+        x=1, y=1.05,
+        sizex=0.2, sizey=0.2,
+        xanchor="right", yanchor="bottom"
+    )
+)
+
 fig.write_html(f'{outputdir}/Positividad_PD49.html')

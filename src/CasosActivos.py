@@ -125,6 +125,15 @@ fig.update_layout(
         size=14,
     )
 )
+fig.add_layout_image(
+    dict(
+        source="https://i2.wp.com/dlab.cl/wp-content/uploads/2016/08/LogoWebDlab.png",
+        xref="paper", yref="paper",
+        x=1, y=1.05,
+        sizex=0.2, sizey=0.2,
+        xanchor="right", yanchor="bottom"
+    )
+)
 
 fig.write_html(f'{outputdir}/Casos_Activos.html')
 
@@ -233,5 +242,14 @@ fig.update_layout(
 fig.update_yaxes(row=1, col=1, title_text='Casos activos')
 fig.update_yaxes(row=1, col=1, title_text='Ocupación UCI', secondary_y=True)
 fig.update_yaxes(row=2, col=1, title_text='UCI / Activos')
+fig.add_layout_image(
+    dict(
+        source="https://i2.wp.com/dlab.cl/wp-content/uploads/2016/08/LogoWebDlab.png",
+        xref="paper", yref="paper",
+        x=1, y=1.05,
+        sizex=0.2, sizey=0.2,
+        xanchor="right", yanchor="bottom"
+    )
+)
 
 fig.write_html(f'{outputdir}/Casos_Activos_vs_UCI.html')

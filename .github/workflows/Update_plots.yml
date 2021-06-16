@@ -42,6 +42,7 @@ jobs:
           python src/CasosActivos.py
           python src/Positividad_PD49.py
           python src/CasosNuevosMasProbables.py
+          python src/CalculoSusceptibles.py
     - uses: stefanzweifel/git-auto-commit-action@v4
       with:
         commit_message: "Update HTML plots"

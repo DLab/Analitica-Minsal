@@ -48,7 +48,7 @@ jobs:
         commit_message: "Update HTML plots"
 
         # Optional glob pattern of files which should be added to the commit
-        file_pattern: output/*.html
+        file_pattern: output/*.html csv_output/*.csv
 
         # Optional local file path to the repository
         repository: .

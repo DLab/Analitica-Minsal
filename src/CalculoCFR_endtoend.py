@@ -178,4 +178,4 @@ fig_cfr.update_layout(
             )
 
 fig_cfr.write_html(f'{outputdir}/CFR_edad_sexo.html')
-cfr.to_csv(f'{csvoutputdir}/CFR_edad_sexo_std.csv')
+cfr.to_csv(f'{csvoutputdir}/CFR_edad_sexo_std.csv', index=False)

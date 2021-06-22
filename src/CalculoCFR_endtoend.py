@@ -170,7 +170,7 @@ fig_cfr.update_layout(
                      dict(label="Lineal",  
                           method="relayout", 
                           args=[{"yaxis.type": "linear"}]),
-                     dict(label="Logaritmico", 
+                     dict(label="logarítmico", 
                           method="relayout", 
                           args=[{"yaxis.type": "log"}]),
                                   ])],

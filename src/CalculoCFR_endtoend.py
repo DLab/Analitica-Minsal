@@ -61,8 +61,11 @@ deis.sort_index(inplace=True)
 rmtree('deis_data')
 deis['EDAD_ANOS'] = deis.apply(annos, axis = 1)
 bins = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 999]
+bins_10s = [0, 10, 20, 30, 40, 50, 60, 70, 80, 999]
 labels = ['00-04', '05-09', '10-14', '15-19', '20-24', '25-29', '30-34', '35-39', '40-44', '45-49', '50-54', '55-59', '60-64', '65-69', '70-74', '75-79', '80+']
+labels_10s = ['00-09', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80+']
 deis['agerange'] = pd.cut(deis.EDAD_ANOS, bins, labels=labels, include_lowest=True, right=False)
+deis['agerange_10s'] = pd.cut(deis.EDAD_ANOS, bins_10s, labels=labels_10s, include_lowest=True, right=False)
 # deis_gruped = pd.pivot_table(deis.loc[(deis['CODIGO_CATEGORIA_DIAG1'] == 'U07')], values=['EDAD_CANT'], index=['FECHA_DEF'],
 #                     columns=['agerange'], aggfunc='count')['EDAD_CANT']
 # deis_gruped = deis_gruped.resample('D').asfreq().fillna(0)
@@ -72,6 +75,12 @@ defunciones_deis_genero_edad = pd.pivot_table(deis.loc[(deis['CODIGO_CATEGORIA_D
 defunciones_deis_genero_edad.columns.names = ['Sexo', 'Edad']
 defunciones_deis_genero_edad.index.name = 'Fecha'
 defunciones_deis_genero_edad = defunciones_deis_genero_edad.asfreq('D').fillna(0)
+
+defunciones_deis_genero_edad_10s = pd.pivot_table(deis.loc[(deis['CODIGO_CATEGORIA_DIAG1'] == 'U07')], values=['EDAD_CANT'], index=['FECHA_DEF'],
+                    columns=['GLOSA_SEXO', 'agerange_10s'], aggfunc='count')['EDAD_CANT']
+defunciones_deis_genero_edad_10s.columns.names = ['Sexo', 'Edad']
+defunciones_deis_genero_edad_10s.index.name = 'Fecha'
+defunciones_deis_genero_edad_10s = defunciones_deis_genero_edad_10s.asfreq('D').fillna(0)
 casos = pd.read_csv('https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto16/CasosGeneroEtario_std.csv')
 tr_edad = {
     '00 - 04 años': '00-04',
@@ -107,6 +116,21 @@ casos_genero_edad = casos_genero_edad.resample('D').interpolate('quadratic')
 casos_genero_edad = casos_genero_edad.diff().fillna(0)
 
 casos_genero_edad.columns.names = ['Sexo', 'Edad']
+# casos_genero_edad.index.name = 'Fecha'
+casos_genero_edad_10s = casos_genero_edad.copy()
+i = 0
+for sex in tr_sex.values():
+    for ages in labels_10s:
+        if ages == '80+':
+#             casos_genero_edad_10s[sex, ages] = casos_genero_edad_10s[sex]['80+']
+            continue
+#         print(casos_genero_edad_10s[sex].columns[i:i+2])
+#         print(casos_genero_edad_10s[sex][casos_genero_edad_10s[sex].columns[i:i+2]].sum())
+        casos_genero_edad_10s[sex, ages] = casos_genero_edad_10s[sex][casos_genero_edad_10s[sex].columns[i:i+2]].sum(axis=1)
+        i += 2
+    i = 0
+casos_genero_edad_10s.drop(columns=list(tr_edad.values())[:-1], inplace=True, level=1)
+casos_genero_edad_10s = casos_genero_edad_10s.sort_index(axis=1)
 defunciones_deis_edad = defunciones_deis_genero_edad.sum().reset_index().groupby(['Edad']).sum()
 casos_edad = casos_genero_edad.sum().reset_index().groupby(['Edad']).sum()
 cfr_edad = defunciones_deis_edad/casos_edad
@@ -179,3 +203,78 @@ fig_cfr.update_layout(
 
 fig_cfr.write_html(f'{outputdir}/CFR_edad_sexo.html')
 cfr.to_csv(f'{csvoutputdir}/CFR_edad_sexo_std.csv', index=False)
+
+
+defunciones_deis_edad_10s = defunciones_deis_genero_edad_10s.sum().reset_index().groupby(['Edad']).sum()
+casos_edad_10s = casos_genero_edad_10s.sum().reset_index().groupby(['Edad']).sum()
+cfr_edad_10s = defunciones_deis_edad_10s/casos_edad_10s
+cfr_edad_10s.rename(columns={0: 'CFR'}, inplace=True)
+cfr_edad_10s = cfr_edad_10s.reset_index()
+overall_ing = 'General'
+cfr_edad_10s['Sexo'] = overall_ing
+
+cfr_10s = ((defunciones_deis_genero_edad_10s.sum()/casos_genero_edad_10s.sum()))
+cfr_10s.rename('CFR', inplace=True)
+cfr_10s = cfr_10s.reset_index()
+
+cfr_total_total_10s = defunciones_deis_genero_edad_10s.sum().sum()/casos_genero_edad_10s.sum().sum()
+cfr_total_hombre_10s = defunciones_deis_genero_edad_10s['Hombre'].sum().sum()/casos_genero_edad_10s['Hombre'].sum().sum()
+cfr_total_mujer_10s = defunciones_deis_genero_edad_10s['Mujer'].sum().sum()/casos_genero_edad_10s['Mujer'].sum().sum()
+cfr_10s = cfr_10s.append({'Sexo': 'Hombre', 'Edad': overall_ing, 'CFR': cfr_total_hombre_10s}, ignore_index=True)
+cfr_10s = cfr_10s.append({'Sexo': 'Mujer', 'Edad': overall_ing, 'CFR': cfr_total_mujer_10s}, ignore_index=True)
+cfr_10s = cfr_10s.append({'Sexo': overall_ing, 'Edad': overall_ing, 'CFR': cfr_total_total_10s}, ignore_index=True)
+cfr_10s = cfr_10s.append(cfr_edad_10s, ignore_index=True)
+
+Wong = ['#000000', '#E69F00', '#56B4E9',
+        '#009E73', '#F0E442', '#0072B2',
+        '#D55E00', '#CC79A7']
+
+fig_cfr_10s = px.bar(
+    cfr_10s,
+    x='Edad',
+    y='CFR',
+    color='Sexo',
+    barmode='group',
+    color_discrete_sequence=Wong
+)
+fig_cfr_10s.update_xaxes(type='category')
+fig_cfr_10s.update_layout(hovermode='x')
+fig_cfr_10s.update_traces(
+    hovertemplate="<br>".join([
+#         "Día: %{x}",
+        "%{y:.2%}",
+    ])
+)
+fig_cfr_10s.update_layout(
+    template='plotly_white',
+    yaxis_tickformat = '.1%',
+    font=dict(
+        size=14,
+    ),
+    title='Tasa de letalidad por COVID19 en Chile (Case Fatality Rate, CFR)'
+)
+fig_cfr_10s.add_layout_image(
+    dict(
+        source="https://i2.wp.com/dlab.cl/wp-content/uploads/2016/08/LogoWebDlab.png",
+        xref="paper", yref="paper",
+        x=1, y=1.0,
+        sizex=0.2, sizey=0.2,
+        xanchor="right", yanchor="bottom"
+    )
+)
+fig_cfr_10s.update_layout(
+       updatemenus=[
+            dict(
+                 buttons=[
+                     dict(label="Lineal",  
+                          method="relayout", 
+                          args=[{"yaxis.type": "linear"}]),
+                     dict(label="Logaritmico", 
+                          method="relayout", 
+                          args=[{"yaxis.type": "log"}]),
+                                  ])],
+                font=dict(size=11)
+            )
+fig_cfr_10s.write_html(f'{outputdir}/CFR_edad_sexo_10s.html')
+cfr_10s.to_csv(f'{csvoutputdir}/CFR_edad_sexo_std_10s.csv', index=False)
+

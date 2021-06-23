@@ -17,7 +17,7 @@ Wong = ['#000000', '#E69F00', '#56B4E9',
 
 fig.add_trace(
     go.Scatter(x=dp49.index,
-               y=dp49['positividad'],
+               y=dp49['positividad pcr'],
                mode='lines',
                name='Positividad (DP49)',
                line_color=Wong[0]
@@ -25,9 +25,9 @@ fig.add_trace(
 )
 fig.add_trace(
     go.Scatter(x=dp49.index,
-               y=dp49['positividad'].rolling(7).mean(),
+               y=dp49['positividad pcr'].rolling(7).mean(),
                mode='lines',
-               name='Media movil 7d de la positividad (DP49)',
+               name='Media movil 7d de la positividad pcr (DP49)',
                line_color=Wong[1]
               )
 )

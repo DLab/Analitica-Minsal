@@ -160,6 +160,7 @@ fig_cfr = px.bar(
     y='CFR',
     color='Sexo',
     barmode='group',
+    text='CFR',
     color_discrete_sequence=Wong
 )
 fig_cfr.update_xaxes(type='category')
@@ -187,19 +188,21 @@ fig_cfr.add_layout_image(
         xanchor="right", yanchor="bottom"
     )
 )
-fig_cfr.update_layout(
-       updatemenus=[
-            dict(
-                 buttons=[
-                     dict(label="Lineal",  
-                          method="relayout", 
-                          args=[{"yaxis.type": "linear"}]),
-                     dict(label="logarítmico", 
-                          method="relayout", 
-                          args=[{"yaxis.type": "log"}]),
-                                  ])],
-                font=dict(size=11)
-            )
+# fig_cfr.update_layout(
+#        updatemenus=[
+#             dict(
+#                  buttons=[
+#                      dict(label="Lineal",  
+#                           method="relayout", 
+#                           args=[{"yaxis.type": "linear"}]),
+#                      dict(label="logarítmico", 
+#                           method="relayout", 
+#                           args=[{"yaxis.type": "log"}]),
+#                                   ])],
+#                 font=dict(size=11)
+#             )
+fig_cfr.update_traces(texttemplate='%{text:.1%}', textposition='outside')
+fig_cfr.update_layout(uniformtext_minsize=8, uniformtext_mode='hide')
 
 fig_cfr.write_html(f'{outputdir}/CFR_edad_sexo.html')
 cfr.to_csv(f'{csvoutputdir}/CFR_edad_sexo_std.csv', index=False)
@@ -262,19 +265,19 @@ fig_cfr_10s.add_layout_image(
         xanchor="right", yanchor="bottom"
     )
 )
-fig_cfr_10s.update_layout(
-       updatemenus=[
-            dict(
-                 buttons=[
-                     dict(label="Lineal",  
-                          method="relayout", 
-                          args=[{"yaxis.type": "linear"}]),
-                     dict(label="Logaritmico", 
-                          method="relayout", 
-                          args=[{"yaxis.type": "log"}]),
-                                  ])],
-                font=dict(size=11)
-            )
+# fig_cfr_10s.update_layout(
+#        updatemenus=[
+#             dict(
+#                  buttons=[
+#                      dict(label="Lineal",  
+#                           method="relayout", 
+#                           args=[{"yaxis.type": "linear"}]),
+#                      dict(label="Logaritmico", 
+#                           method="relayout", 
+#                           args=[{"yaxis.type": "log"}]),
+#                                   ])],
+#                 font=dict(size=11)
+#             )
 fig_cfr_10s.write_html(f'{outputdir}/CFR_edad_sexo_10s.html')
 cfr_10s.to_csv(f'{csvoutputdir}/CFR_edad_sexo_std_10s.csv', index=False)
 

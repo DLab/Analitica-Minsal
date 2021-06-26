@@ -511,20 +511,31 @@ piramide_chile = { # https://www.populationpyramid.net/es/chile/2020/
     '40-49': 2_578_404,
     '<=39': 7_185_184, # 15-39
 }
-dosis1 = pd.read_csv('https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto78/vacunados_edad_fecha_1eraDosis_T.csv', index_col=0)
-dosis2 = pd.read_csv('https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto78/vacunados_edad_fecha_2daDosis_T.csv', index_col=0)
+dosis1 = pd.read_csv('https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto78/vacunados_edad_fecha_1eraDosis_std.csv', parse_dates=[1],)
+bins = [0, 40, 50, 60, 70, 999]
+labels = ['<=39', '40-49', '50-59', '60-69', '>=70']
+dosis1['agerange'] = pd.cut(dosis1.Edad, bins, labels=labels, include_lowest=True, right=False)
+dosis1 = pd.pivot_table(dosis1, values=['Primera Dosis'], index=['Fecha'],
+                    columns=['agerange'], aggfunc=np.sum)['Primera Dosis']
+
+dosis2 = pd.read_csv('https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto78/vacunados_edad_fecha_2daDosis_std.csv', parse_dates=[1],)
+dosis2['agerange'] = pd.cut(dosis2.Edad, bins, labels=labels, include_lowest=True, right=False)
+dosis2 = pd.pivot_table(dosis2, values=['Segunda Dosis'], index=['Fecha'],
+                    columns=['agerange'], aggfunc=np.sum)['Segunda Dosis']
 dosis1.fillna(0, inplace=True)
 dosis2.fillna(0, inplace=True)
-dosis1[">=70"] = dosis1[dosis1.columns[58:]].sum(axis=1).cumsum()
-dosis1["60-69"] = dosis1[dosis1.columns[48:58]].sum(axis=1).cumsum()
-dosis1["50-59"] = dosis1[dosis1.columns[38:48]].sum(axis=1).cumsum()
-dosis1["40-49"] = dosis1[dosis1.columns[28:38]].sum(axis=1).cumsum()
-dosis1["<=39"] = dosis1[dosis1.columns[:28]].sum(axis=1).cumsum()
-dosis2[">=70"] = dosis2[dosis2.columns[58:]].sum(axis=1).cumsum()
-dosis2["60-69"] = dosis2[dosis2.columns[48:58]].sum(axis=1).cumsum()
-dosis2["50-59"] = dosis2[dosis2.columns[38:48]].sum(axis=1).cumsum()
-dosis2["40-49"] = dosis2[dosis2.columns[28:38]].sum(axis=1).cumsum()
-dosis2["<=39"] = dosis2[dosis2.columns[:28]].sum(axis=1).cumsum()
+dosis1 = dosis1.cumsum()
+dosis2 = dosis2.cumsum()
+# dosis1[">=70"] = dosis1[dosis1.columns[58:]].sum(axis=1).cumsum()
+# dosis1["60-69"] = dosis1[dosis1.columns[48:58]].sum(axis=1).cumsum()
+# dosis1["50-59"] = dosis1[dosis1.columns[38:48]].sum(axis=1).cumsum()
+# dosis1["40-49"] = dosis1[dosis1.columns[28:38]].sum(axis=1).cumsum()
+# dosis1["<=39"] = dosis1[dosis1.columns[:28]].sum(axis=1).cumsum()
+# dosis2[">=70"] = dosis2[dosis2.columns[58:]].sum(axis=1).cumsum()
+# dosis2["60-69"] = dosis2[dosis2.columns[48:58]].sum(axis=1).cumsum()
+# dosis2["50-59"] = dosis2[dosis2.columns[38:48]].sum(axis=1).cumsum()
+# dosis2["40-49"] = dosis2[dosis2.columns[28:38]].sum(axis=1).cumsum()
+# dosis2["<=39"] = dosis2[dosis2.columns[:28]].sum(axis=1).cumsum()
 
 dosis1['>=70'] = dosis1['>=70']/piramide_chile_INE['>=70']*100
 dosis2['>=70'] = dosis2['>=70']/piramide_chile_INE['>=70']*100
@@ -616,20 +627,32 @@ pl_vac_tot.add_layout_image(
 pl_vac_tot.write_html(f'{outputdir}/vacunacion_total_INE.html')
 
 
-dosis1 = pd.read_csv('https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto78/vacunados_edad_fecha_1eraDosis_T.csv', index_col=0)
-dosis2 = pd.read_csv('https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto78/vacunados_edad_fecha_2daDosis_T.csv', index_col=0)
+dosis1 = pd.read_csv('https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto78/vacunados_edad_fecha_1eraDosis_std.csv', parse_dates=[1],)
+bins = [0, 40, 50, 60, 70, 999]
+labels = ['<=39', '40-49', '50-59', '60-69', '>=70']
+dosis1['agerange'] = pd.cut(dosis1.Edad, bins, labels=labels, include_lowest=True, right=False)
+dosis1 = pd.pivot_table(dosis1, values=['Primera Dosis'], index=['Fecha'],
+                    columns=['agerange'], aggfunc=np.sum)['Primera Dosis']
+
+dosis2 = pd.read_csv('https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto78/vacunados_edad_fecha_2daDosis_std.csv', parse_dates=[1],)
+dosis2['agerange'] = pd.cut(dosis2.Edad, bins, labels=labels, include_lowest=True, right=False)
+dosis2 = pd.pivot_table(dosis2, values=['Segunda Dosis'], index=['Fecha'],
+                    columns=['agerange'], aggfunc=np.sum)['Segunda Dosis']
 dosis1.fillna(0, inplace=True)
 dosis2.fillna(0, inplace=True)
-dosis1[">=70"] = dosis1[dosis1.columns[58:]].sum(axis=1).cumsum()
-dosis1["60-69"] = dosis1[dosis1.columns[48:58]].sum(axis=1).cumsum()
-dosis1["50-59"] = dosis1[dosis1.columns[38:48]].sum(axis=1).cumsum()
-dosis1["40-49"] = dosis1[dosis1.columns[28:38]].sum(axis=1).cumsum()
-dosis1["<=39"] = dosis1[dosis1.columns[:28]].sum(axis=1).cumsum()
-dosis2[">=70"] = dosis2[dosis2.columns[58:]].sum(axis=1).cumsum()
-dosis2["60-69"] = dosis2[dosis2.columns[48:58]].sum(axis=1).cumsum()
-dosis2["50-59"] = dosis2[dosis2.columns[38:48]].sum(axis=1).cumsum()
-dosis2["40-49"] = dosis2[dosis2.columns[28:38]].sum(axis=1).cumsum()
-dosis2["<=39"] = dosis2[dosis2.columns[:28]].sum(axis=1).cumsum()
+dosis1 = dosis1.cumsum()
+dosis2 = dosis2.cumsum()
+
+# dosis1[">=70"] = dosis1[dosis1.columns[58:]].sum(axis=1).cumsum()
+# dosis1["60-69"] = dosis1[dosis1.columns[48:58]].sum(axis=1).cumsum()
+# dosis1["50-59"] = dosis1[dosis1.columns[38:48]].sum(axis=1).cumsum()
+# dosis1["40-49"] = dosis1[dosis1.columns[28:38]].sum(axis=1).cumsum()
+# dosis1["<=39"] = dosis1[dosis1.columns[:28]].sum(axis=1).cumsum()
+# dosis2[">=70"] = dosis2[dosis2.columns[58:]].sum(axis=1).cumsum()
+# dosis2["60-69"] = dosis2[dosis2.columns[48:58]].sum(axis=1).cumsum()
+# dosis2["50-59"] = dosis2[dosis2.columns[38:48]].sum(axis=1).cumsum()
+# dosis2["40-49"] = dosis2[dosis2.columns[28:38]].sum(axis=1).cumsum()
+# dosis2["<=39"] = dosis2[dosis2.columns[:28]].sum(axis=1).cumsum()
 
 dosis1['>=70'] = dosis1['>=70']/piramide_chile['>=70']*100
 dosis2['>=70'] = dosis2['>=70']/piramide_chile['>=70']*100
@@ -721,20 +744,29 @@ pl_vac_tot.add_layout_image(
 pl_vac_tot.write_html(f'{outputdir}/vacunacion_total.html')
 
 #Vacunas numero
-dosis1 = pd.read_csv('https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto78/vacunados_edad_fecha_1eraDosis_T.csv', index_col=0)
-dosis2 = pd.read_csv('https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto78/vacunados_edad_fecha_2daDosis_T.csv', index_col=0)
+dosis1 = pd.read_csv('https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto78/vacunados_edad_fecha_1eraDosis_std.csv', parse_dates=[1],)
+bins = [0, 40, 50, 60, 70, 999]
+labels = ['<=39', '40-49', '50-59', '60-69', '>=70']
+dosis1['agerange'] = pd.cut(dosis1.Edad, bins, labels=labels, include_lowest=True, right=False)
+dosis1 = pd.pivot_table(dosis1, values=['Primera Dosis'], index=['Fecha'],
+                    columns=['agerange'], aggfunc=np.sum)['Primera Dosis']
+
+dosis2 = pd.read_csv('https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto78/vacunados_edad_fecha_2daDosis_std.csv', parse_dates=[1],)
+dosis2['agerange'] = pd.cut(dosis2.Edad, bins, labels=labels, include_lowest=True, right=False)
+dosis2 = pd.pivot_table(dosis2, values=['Segunda Dosis'], index=['Fecha'],
+                    columns=['agerange'], aggfunc=np.sum)['Segunda Dosis']
 dosis1.fillna(0, inplace=True)
 dosis2.fillna(0, inplace=True)
-dosis1[">=70"] = dosis1[dosis1.columns[58:]].sum(axis=1)
-dosis1["60-69"] = dosis1[dosis1.columns[48:58]].sum(axis=1)
-dosis1["50-59"] = dosis1[dosis1.columns[38:48]].sum(axis=1)
-dosis1["40-49"] = dosis1[dosis1.columns[28:38]].sum(axis=1)
-dosis1["<=39"] = dosis1[dosis1.columns[:28]].sum(axis=1)
-dosis2[">=70"] = dosis2[dosis2.columns[58:]].sum(axis=1)
-dosis2["60-69"] = dosis2[dosis2.columns[48:58]].sum(axis=1)
-dosis2["50-59"] = dosis2[dosis2.columns[38:48]].sum(axis=1)
-dosis2["40-49"] = dosis2[dosis2.columns[28:38]].sum(axis=1)
-dosis2["<=39"] = dosis2[dosis2.columns[:28]].sum(axis=1)
+# dosis1[">=70"] = dosis1[dosis1.columns[58:]].sum(axis=1)
+# dosis1["60-69"] = dosis1[dosis1.columns[48:58]].sum(axis=1)
+# dosis1["50-59"] = dosis1[dosis1.columns[38:48]].sum(axis=1)
+# dosis1["40-49"] = dosis1[dosis1.columns[28:38]].sum(axis=1)
+# dosis1["<=39"] = dosis1[dosis1.columns[:28]].sum(axis=1)
+# dosis2[">=70"] = dosis2[dosis2.columns[58:]].sum(axis=1)
+# dosis2["60-69"] = dosis2[dosis2.columns[48:58]].sum(axis=1)
+# dosis2["50-59"] = dosis2[dosis2.columns[38:48]].sum(axis=1)
+# dosis2["40-49"] = dosis2[dosis2.columns[28:38]].sum(axis=1)
+# dosis2["<=39"] = dosis2[dosis2.columns[:28]].sum(axis=1)
 
 pl_vac_tot = make_subplots(rows=5, cols=1, shared_xaxes=True,)
 

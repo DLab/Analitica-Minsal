@@ -121,7 +121,7 @@ susceptibles['60-69'] = piramide['60-69']
 susceptibles['70-79'] = piramide['70-79']
 susceptibles['>=80'] = piramide['>=80']
 
-efectividad = 56
+efectividad = 66 # https://www.nejm.org/doi/full/10.1056/NEJMoa2107715
 
 susceptibles_timeseries = susceptibles.subtract(casos_m.shift(14).cumsum().fillna(0), fill_value=0).iloc[:-2].subtract(dosis2.shift(14).cumsum().fillna(0), fill_value=0).iloc[:-3].subtract(deis_gruped.cumsum().fillna(0), fill_value=0).iloc[:-2]
 susceptibles_timeseries = susceptibles_timeseries.round(0)
@@ -135,10 +135,10 @@ colorder = ['<=19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '>=80'
 susceptibles_timeseries.columns = colorder
 susceptibles_efectividad56_timeseries.columns = colorder
 susceptibles_timeseries.to_csv(f'{outputdir}/Susceptibles.csv')
-susceptibles_efectividad56_timeseries.to_csv(f'{outputdir}/Susceptibles_efectividad56.csv')
+susceptibles_efectividad56_timeseries.to_csv(f'{outputdir}/Susceptibles_efectividad66.csv')
 
 pd.melt(susceptibles_timeseries, ignore_index=False, var_name='Edad', value_name='Susceptibles').to_csv(f'{outputdir}/Susceptibles_std.csv')
-pd.melt(susceptibles_efectividad56_timeseries, ignore_index=False, var_name='Edad', value_name='Susceptibles').to_csv(f'{outputdir}/Susceptibles_efectividad56_std.csv')
+pd.melt(susceptibles_efectividad56_timeseries, ignore_index=False, var_name='Edad', value_name='Susceptibles').to_csv(f'{outputdir}/Susceptibles_efectividad66_std.csv')
 
 
 # os.remove(f'deis_data/{get_csv_deis()}.csv')

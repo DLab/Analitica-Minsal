@@ -45,6 +45,7 @@ jobs:
           python src/CalculoSusceptibles.py
           python src/CalculoCFR_endtoend.py
           python src/EsquemaCompleto.py
+          python src/EfectoVac_Ingresos.py
     - uses: stefanzweifel/git-auto-commit-action@v4
       with:
         commit_message: "Update HTML plots"

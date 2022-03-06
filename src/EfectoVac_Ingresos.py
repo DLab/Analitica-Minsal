@@ -152,10 +152,11 @@ vacunacion_tot.columns.name = 'Fecha'
 vacunacion_tot['Esquema_completo'] = vacunacion_tot['Segunda'].shift(14) + vacunacion_tot['Unica'].shift(14).fillna(0)
 vacunacion_tot['Esquema_completo_diario'] = vacunacion_tot['Esquema_completo'].diff()
 vacunacion_tot['Refuerzo_diario'] = vacunacion_tot['Refuerzo'].diff()
-vacunacion_tot['Esquema_completo_actualizado'] = vacunacion_tot['Esquema_completo_diario'] + vacunacion_tot['Refuerzo_diario'].shift(14).fillna(0) - vacunacion_tot['Esquema_completo_diario'].shift(168).fillna(0)  - vacunacion_tot['Refuerzo_diario'].shift(168).fillna(0) 
+vacunacion_tot['Cuarta_diario'] = vacunacion_tot['Cuarta'].diff()
+vacunacion_tot['Esquema_completo_actualizado'] = vacunacion_tot['Esquema_completo_diario'] + vacunacion_tot['Refuerzo_diario'].shift(14).fillna(0) + vacunacion_tot['Cuarta_diario'].shift(14).fillna(0) - vacunacion_tot['Esquema_completo_diario'].shift(168).fillna(0)  - vacunacion_tot['Refuerzo_diario'].shift(168).fillna(0) - vacunacion_tot['Cuarta_diario'].shift(168).fillna(0)
 vacunacion_tot = vacunacion_tot.fillna(0)
 vacunacion_tot.index = pd.to_datetime(vacunacion_tot.index)
-
+vacunacion_tot.to_csv('test.tsv')
 # vacunacion_tot
 vacunacion_tot['Esquema_completo_actualizado'].cumsum().plot()
 # vacunacion_tot['Esquema_completo'].plot()

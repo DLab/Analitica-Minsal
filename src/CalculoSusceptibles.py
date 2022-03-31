@@ -14,7 +14,7 @@ deis_data = repo_dir/'deis_data'
 deis_data.mkdir(parents=True, exist_ok=True)
 
 def get_deis_death_url():
-    datapattern = compile('http.*DEFUNCIONES_FUENTE_DEIS_2016_2021.*zip')
+    datapattern = compile('http.*DEFUNCIONES_FUENTE_DEIS_2016_2022.*zip')
     with urllib.request.urlopen('https://deis.minsal.cl/wp-admin/admin-ajax.php?action=wp_ajax_ninja_tables_public_action&table_id=2889&target_action=get-all-data&default_sorting=manual_sort') as f:
         return datapattern.search(f.read().decode().replace(',','\n')).group().replace('\\', '')
 

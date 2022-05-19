@@ -64,7 +64,7 @@ fig = go.Figure([
 ])
 fig.update_layout(
     yaxis_title='Personas diarias',
-    title='Vacunacion diaria en Chile (promedio móvil 7 dias)',
+    title='Vacunacion diaria en Chile (promedio móvil 7 días)',
     hovermode="x"
 )
 fig.update_layout(

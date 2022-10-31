@@ -259,7 +259,8 @@ if __name__ == "__main__":
         ax[2].get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
 
 
-        plt.figtext(0.5, -0.01, NOTAS[0], ha="center", bbox={"facecolor":"lightgray", "alpha":0.5, "pad":5})
+        plt.figtext(0.5, -0.01, NOTAS[0], ha="center", bbox={"facecolor":"lightgray", "alpha":0.5, "pad":5}, fontsize='small')
+
         ax[0].set_xlim(xmin=datetime.datetime(2016, 1, 1, ))
         ax[1].set_xlim(xmin=datetime.datetime(2016, 1, 1, ))
         ax[2].set_xlim(xmin=datetime.datetime(2016, 1, 1, ))
@@ -306,7 +307,8 @@ if __name__ == "__main__":
         ax[2].get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
 
 
-        plt.figtext(0.5, -0.01, NOTAS[0], ha="center", bbox={"facecolor":"lightgray", "alpha":0.5, "pad":5})
+        plt.figtext(0.5, -0.01, NOTAS[0], ha="center", bbox={"facecolor":"lightgray", "alpha":0.5, "pad":5}, fontsize='small')
+
         ax[0].set_xlim(xmin=datetime.datetime(2016, 1, 1, ))
         ax[1].set_xlim(xmin=datetime.datetime(2016, 1, 1, ))
         ax[2].set_xlim(xmin=datetime.datetime(2016, 1, 1, ))
@@ -350,7 +352,8 @@ if __name__ == "__main__":
         ax[1].get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
         ax[2].get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
 
-        plt.figtext(0.5, -0.01, NOTAS[0], ha="center", bbox={"facecolor":"lightgray", "alpha":0.5, "pad":5})
+        plt.figtext(0.5, -0.01, NOTAS[0], ha="center", bbox={"facecolor":"lightgray", "alpha":0.5, "pad":5}, fontsize='small')
+
         ax[0].set_xlim(xmin=datetime.datetime(2020, 1, 1, ))
         ax[1].set_xlim(xmin=datetime.datetime(2020, 1, 1, ))
         ax[2].set_xlim(xmin=datetime.datetime(2020, 1, 1, ))
@@ -393,7 +396,8 @@ if __name__ == "__main__":
         ax[1].get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
         ax[2].get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
 
-        plt.figtext(0.5, -0.01, NOTAS[0], ha="center", bbox={"facecolor":"lightgray", "alpha":0.5, "pad":5})
+        plt.figtext(0.5, -0.01, NOTAS[0], ha="center", bbox={"facecolor":"lightgray", "alpha":0.5, "pad":5}, fontsize='small')
+
         ax[0].set_xlim(xmin=datetime.datetime(2022, 1, 1, ))
         ax[1].set_xlim(xmin=datetime.datetime(2022, 1, 1, ))
         ax[2].set_xlim(xmin=datetime.datetime(2022, 1, 1, ))

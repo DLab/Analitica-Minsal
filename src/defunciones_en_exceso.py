@@ -150,7 +150,7 @@ if __name__ == "__main__":
     deis.sort_index(inplace=True)
     # CODIGO_CATEGORIA_DIAG1 U07 > covid19
     rmtree(deis_data)
-    lastupdatedeis = open(f'{outputdir}/updatedeis', 'r').readlines()[0]
+    lastupdatedeis = open(f'{outputdir}/updatedeis.log', 'r').readlines()[0]
     if lastupdatedeis.strip() != deis.index[-1].strftime('%d/%m/%Y'):
         deis['EDAD_ANOS'] = deis.apply(annos, axis = 1)
         deis['ANO_DEF'] = deis['ANO_DEF'].astype('int32')
@@ -424,6 +424,6 @@ if __name__ == "__main__":
         out = pd.DataFrame(humanweek, columns=['muertes_observadas'])
         out = pd.concat([out, muertes_modeladas, exceso, excesocum], axis="columns")
         out.reset_index().to_csv(f'{outcsvputdir}/defunciones_en_exceso.csv', index=False)
-        print(f"{deis.index[-1].strftime('%d/%m/%Y')}", file=open(f'{outputdir}/updatedeis', 'w'))
+        print(f"{deis.index[-1].strftime('%d/%m/%Y')}", file=open(f'{outputdir}/updatedeis.log', 'w'))
     else:
         print(f'Deis updated: {lastupdatedeis}')

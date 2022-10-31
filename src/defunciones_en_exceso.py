@@ -138,6 +138,8 @@ def plot_xY95(x, Y, ax, col='C1', label='Forecast'):
 if __name__ == "__main__":
     repo_dir = Path(__file__).parent.parent
     outputdir = repo_dir/'output'
+    outcsvputdir = repo_dir/'csv_output'
+
     outputdir.mkdir(parents=True, exist_ok=True)
     deis_data = Path('deis_data')
     deis_data.mkdir(parents=True, exist_ok=True)
@@ -414,3 +416,16 @@ if __name__ == "__main__":
     #plt.savefig(f'{outputdir}/Defunciones_en_exceso_SMOOTH_starton2022.png', bbox_inches='tight', dpi=300)
     plt.savefig(f'{outputdir}/Defunciones_en_exceso_SMOOTH_starton2022.pdf', bbox_inches='tight', dpi=300)
 
+
+    muertes_modeladas = completecounterfactual.posterior_predictive["obs"].quantile((0.05, 0.5, 0.95), dim=("chain", "draw")).transpose().to_pandas()
+    muertes_modeladas.index = humanweek.index
+    muertes_modeladas.columns = ['muertes_esperadas_HDI5%', 'muertes_esperadas_HDI50%', 'muertes_esperadas_HDI95%']
+    exceso = excess_deaths.quantile((0.05, 0.5, 0.95), dim=("chain", "draw")).transpose().to_pandas()
+    exceso.index = humanweek.index
+    exceso.columns = ['muertes_exceso_HDI5%', 'muertes_exceso_HDI50%', 'muertes_exceso_HDI95%']
+    excesocum = cumsum.quantile((0.05, 0.5, 0.95), dim=("chain", "draw")).transpose().to_pandas()
+    excesocum.index = humanweek.index
+    excesocum.columns = ['muertes_exceso_acumulado_HDI5%', 'muertes_exceso_acumulado_HDI50%', 'muertes_exceso_acumulado_HDI95%']
+    out = pd.DataFrame(humanweek, columns=['muertes_observadas'])
+    out = pd.concat([out, muertes_modeladas, exceso, excesocum], axis="columns")
+    out.reset_index().to_csv(f'{outcsvputdir}/defunciones_en_exceso.csv', index=False)

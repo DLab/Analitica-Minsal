@@ -6,3 +6,4 @@ pathlib
 scipy
 pymc
 seaborn
+imageio

@@ -44,7 +44,7 @@ jobs:
         commit_message: "Update deis plots"
 
         # Optional glob pattern of files which should be added to the commit
-        file_pattern: output/*.pdf csv_output/*.csv
+        file_pattern: output/*.pdf output/*.log csv_output/*.csv
 
         # Optional local file path to the repository
         repository: .

@@ -150,282 +150,280 @@ if __name__ == "__main__":
     deis.sort_index(inplace=True)
     # CODIGO_CATEGORIA_DIAG1 U07 > covid19
     rmtree(deis_data)
-    deis['EDAD_ANOS'] = deis.apply(annos, axis = 1)
-    deis['ANO_DEF'] = deis['ANO_DEF'].astype('int32')
-    bins = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 999]
-    bins_10s = [0, 10, 20, 30, 40, 50, 60, 70, 80, 999]
-    labels = ['00-04', '05-09', '10-14', '15-19', '20-24', '25-29', '30-34', '35-39', '40-44', '45-49', '50-54', '55-59', '60-64', '65-69', '70-74', '75-79', '80+']
-    labels_10s = ['00-09', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80+']
-    deis['agerange'] = pd.cut(deis.EDAD_ANOS, bins, labels=labels, include_lowest=True, right=False)
-    deis['agerange_10s'] = pd.cut(deis.EDAD_ANOS, bins_10s, labels=labels_10s, include_lowest=True, right=False)
-
-    # default figure sizes
-    figsize = (10, 5)
-
-    # create a list of month strings, for plotting purposes
-    month_strings = calendar.month_name[1:]
-
-    deis_gruped = pd.pivot_table(deis, values=['EDAD_CANT'], index=['FECHA_DEF'],
-                        columns=['GLOSA_SEXO', 'agerange_10s'], aggfunc='count')['EDAD_CANT'].resample('W-Mon').sum()
-    deis_prepandemia = pd.pivot_table(deis.loc[(deis['ANO_DEF'] <= 2019)], values=['EDAD_CANT'], index=['FECHA_DEF'],
-                        columns=['GLOSA_SEXO', 'agerange_10s'], aggfunc='count')['EDAD_CANT'].resample('W-Mon').sum()
-    deis_gruped = deis_gruped.sum(axis=1).iloc[1:-2]#.groupby(pd.Grouper(freq='W')).sum().iloc[1:-1]
-    deis_prepandemia = deis_prepandemia.sum(axis=1).iloc[1:-1]#.groupby(pd.Grouper(freq='W')).sum().iloc[1:-1]
-
-    sns.set(rc={'figure.figsize':(11.7,8.27)})
-
-
-
-    ## MODEL
-    with pm.Model(coords={"month": month_strings}) as model:
-
-        # observed predictors and outcome
-        month = pm.MutableData("month", deis_prepandemia.index.month.to_numpy(), dims='t')
-        time = pm.MutableData("time", np.array(list(range(len(deis_prepandemia)))), dims='t')
-        deaths = pm.MutableData("deaths", deis_prepandemia.to_numpy(), dims='t')
-        # priors
-        intercept = pm.Normal("intercept", 2200, 10)
-        month_mu = ZeroSumNormal("month mu", sigma=200, dims="month")
-        linear_trend = pm.TruncatedNormal("linear trend", 0, 0.1, lower=0)
-
-        # the actual linear model
-        mu = pm.Deterministic(
-            "mu",
-            intercept + (linear_trend * time) + month_mu[month - 1],
-        )
-        sigma = pm.HalfNormal("sigma", 1)
-        # likelihood
-        pm.TruncatedNormal("obs", mu=mu, sigma=sigma, lower=0, observed=deaths, dims='t')
-
-
-    with model:
-        idata = pm.sample(2000,tune=10000, random_seed=42)
-
-    with model:
-        pm.set_data(
-            {
-                "month": deis_gruped.index.month.to_numpy(),
-                "time": np.array(list(range(len(deis_gruped)))),
-            }
-        )
-        completecounterfactual = pm.sample_posterior_predictive(
-            idata, var_names=["obs"], random_seed=42
-        )
-
-    humanweek = deis_gruped.shift(-7, freq='D')
-
-    TITULO = "Exceso de mortalidad para todos los grupos etarios. Chile"
-
-    sns.set_context('paper', font_scale=1.5)
-
-    fig, ax = plt.subplots(3, 1, figsize=(figsize[0]+5, 9), sharex=True, gridspec_kw={'height_ratios': [5, 2, 2]})
-    #az.plot_hdi(mdates.date2num(humanweek.index), completecounterfactual.posterior_predictive["obs"], hdi_prob=0.5, smooth=True)
-    az.plot_hdi(mdates.date2num(humanweek.index), completecounterfactual.posterior_predictive["obs"], hdi_prob=0.95, smooth=False, smooth_kwargs={'window_length':11}, fill_kwargs={"label": "Modelo (95% Confianza)"}, color="C2", ax = ax[0])
-
-    ax[0].plot(humanweek.index, humanweek, label="Defunciones")
-    #format_x_axis(ax)
-    ax[0].set(title=TITULO)
-    ax[0].legend()
-    ax[0].set_ylim(ymin=0)
-    ax[0].set_ylabel('Defunciones semanales')
-
-    # convert deaths into an XArray object with a labelled dimension to help in the next step
-    deaths = xr.DataArray(humanweek.to_numpy(), dims=["t"])
-
-    # do the calculation by taking the difference
-    excess_deaths = deaths - completecounterfactual.posterior_predictive["obs"]
-    cumsum = excess_deaths.cumsum(dim="t")
-
-    thm = cumsum.transpose(..., "t").quantile((0.05,0.5,0.95), dim=("chain", "draw")).transpose()[-1].to_numpy()
-    thm2 = excess_deaths.transpose(..., "t").quantile((0.05,0.5,0.95), dim=("chain", "draw")).transpose()[-1].to_numpy()
-    NOTAS = [
-        f"Fuente deis.minsal.cl ({deis.index[-1].strftime('%d/%m/%Y')}); Ultima semana analizada {humanweek.index[-1].strftime('%d/%m/%Y')} — {humanweek.shift(7, freq='D').index[-1].strftime('%d/%m/%Y')}; Exceso semanal = {thm2[1]:,.0f} ({thm2[0]:,.0f} — {thm2[2]:,.0f}); Exceso total = {thm[1]:,.0f} ({thm[0]:,.0f} — {thm[2]:,.0f})",
-    ]
-    enTITULO = "Excess mortality for all age groups. Chile"
-
-    plot_xY95(humanweek.index, excess_deaths.transpose(..., "t"), ax[1], label='Exceso de defunciones')
-
-    ax[1].axhline(y=0, color="k")
-    ax[1].legend()
-    ax[1].set_ylabel('Defunciones semanales')
-
-    plot_xY95(humanweek.index, cumsum.transpose(..., "t"), ax[2], label='Exceso de defunciones acumulado')
-    ax[2].axhline(y=0, color="k")
-    ax[2].legend()
-    ax[2].set_ylabel('Defunciones')
-    ax[0].get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
-    ax[1].get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
-    ax[2].get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
-
-
-    plt.figtext(0.5, -0.01, NOTAS[0], ha="center", bbox={"facecolor":"lightgray", "alpha":0.5, "pad":5})
-    ax[0].set_xlim(xmin=datetime.datetime(2016, 1, 1, ))
-    ax[1].set_xlim(xmin=datetime.datetime(2016, 1, 1, ))
-    ax[2].set_xlim(xmin=datetime.datetime(2016, 1, 1, ))
-
-
-    img = imageio.v2.imread('https://i2.wp.com/dlab.cl/wp-content/uploads/2016/08/LogoWebDlab.png')
-
-    # put a new axes where you want the image to appear
-    # (x, y, width, height)
-    imax = fig.add_axes([0.40, 0.9, 0.25, 0.25])
-    # remove ticks & the box from imax 
-    imax.set_axis_off()
-    # print the logo with aspect="equal" to avoid distorting the logo
-    imax.imshow(img, aspect="equal")
-
-    plt.tight_layout()
-    #plt.savefig(f'{outputdir}/Defunciones_en_exceso.png', bbox_inches='tight', dpi=300)
-    plt.savefig(f'{outputdir}/Defunciones_en_exceso.pdf', bbox_inches='tight', dpi=300)
-
-
-    fig, ax = plt.subplots(3, 1, figsize=(figsize[0]+5, 9), sharex=True, gridspec_kw={'height_ratios': [5, 2, 2]})
-    #az.plot_hdi(mdates.date2num(humanweek.index), completecounterfactual.posterior_predictive["obs"], hdi_prob=0.5, smooth=True)
-    az.plot_hdi(mdates.date2num(humanweek.index), completecounterfactual.posterior_predictive["obs"], hdi_prob=0.95, smooth=True, smooth_kwargs={'window_length':11}, fill_kwargs={"label": "Modelo (95% Confianza)"}, color="C2", ax = ax[0])
-
-    ax[0].plot(humanweek.index, humanweek, label="Defunciones")
-    #format_x_axis(ax)
-    ax[0].set(title=TITULO)
-    ax[0].legend()
-    ax[0].set_ylim(ymin=0)
-    ax[0].set_ylabel('Defunciones semanales')
-
-    plot_xY95(humanweek.index, excess_deaths.transpose(..., "t"), ax[1], label='Exceso de defunciones')
-
-    ax[1].axhline(y=0, color="k")
-    ax[1].legend()
-    ax[1].set_ylabel('Defunciones semanales')
-
-    plot_xY95(humanweek.index, cumsum.transpose(..., "t"), ax[2], label='Exceso de defunciones acumulado')
-    ax[2].axhline(y=0, color="k")
-    ax[2].legend()
-    ax[2].set_ylabel('Defunciones')
-    ax[0].get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
-    ax[1].get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
-    ax[2].get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
-
-
-    plt.figtext(0.5, -0.01, NOTAS[0], ha="center", bbox={"facecolor":"lightgray", "alpha":0.5, "pad":5})
-    ax[0].set_xlim(xmin=datetime.datetime(2016, 1, 1, ))
-    ax[1].set_xlim(xmin=datetime.datetime(2016, 1, 1, ))
-    ax[2].set_xlim(xmin=datetime.datetime(2016, 1, 1, ))
-
-    img = imageio.v2.imread('https://i2.wp.com/dlab.cl/wp-content/uploads/2016/08/LogoWebDlab.png')
-
-    # put a new axes where you want the image to appear
-    # (x, y, width, height)
-    imax = fig.add_axes([0.40, 0.9, 0.25, 0.25])
-    # remove ticks & the box from imax 
-    imax.set_axis_off()
-    # print the logo with aspect="equal" to avoid distorting the logo
-    imax.imshow(img, aspect="equal")
-
-    plt.tight_layout()
-    #plt.savefig(f'{outputdir}/Defunciones_en_exceso_SMOOTH.png', bbox_inches='tight', dpi=300)
-    plt.savefig(f'{outputdir}/Defunciones_en_exceso_SMOOTH.pdf', bbox_inches='tight', dpi=300)
-
-
-
-    fig, ax = plt.subplots(3, 1, figsize=(figsize[0]+5, 9), sharex=True, gridspec_kw={'height_ratios': [5, 2, 2]})
-    #az.plot_hdi(mdates.date2num(humanweek.index), completecounterfactual.posterior_predictive["obs"], hdi_prob=0.5, smooth=True)
-    az.plot_hdi(mdates.date2num(humanweek.index), completecounterfactual.posterior_predictive["obs"], hdi_prob=0.95, smooth=True, smooth_kwargs={'window_length':11}, fill_kwargs={"label": "Modelo (95% Confianza)"}, color="C2", ax = ax[0])
-
-    ax[0].plot(humanweek.index, humanweek, label="Defunciones")
-    #format_x_axis(ax)
-    ax[0].set(title=TITULO)
-    ax[0].legend()
-    ax[0].set_ylim(ymin=0)
-    ax[0].set_ylabel('Defunciones semanales')
-
-    plot_xY95(humanweek.index, excess_deaths.transpose(..., "t"), ax[1], label='Exceso de defunciones')
-
-    ax[1].axhline(y=0, color="k")
-    ax[1].legend()
-    ax[1].set_ylabel('Defunciones semanales')
-
-    plot_xY95(humanweek.index, cumsum.transpose(..., "t"), ax[2], label='Exceso de defunciones acumulado')
-    ax[2].axhline(y=0, color="k")
-    ax[2].legend()
-    ax[2].set_ylabel('Defunciones')
-    ax[0].get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
-    ax[1].get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
-    ax[2].get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
-
-    plt.figtext(0.5, -0.01, NOTAS[0], ha="center", bbox={"facecolor":"lightgray", "alpha":0.5, "pad":5})
-    ax[0].set_xlim(xmin=datetime.datetime(2020, 1, 1, ))
-    ax[1].set_xlim(xmin=datetime.datetime(2020, 1, 1, ))
-    ax[2].set_xlim(xmin=datetime.datetime(2020, 1, 1, ))
-
-
-    img = imageio.v2.imread('https://i2.wp.com/dlab.cl/wp-content/uploads/2016/08/LogoWebDlab.png')
-
-    # put a new axes where you want the image to appear
-    # (x, y, width, height)
-    imax = fig.add_axes([0.40, 0.9, 0.25, 0.25])
-    # remove ticks & the box from imax 
-    imax.set_axis_off()
-    # print the logo with aspect="equal" to avoid distorting the logo
-    imax.imshow(img, aspect="equal")
-
-    plt.tight_layout()
-    #plt.savefig(f'{outputdir}/Defunciones_en_exceso_SMOOTH_starton2020.png', bbox_inches='tight', dpi=300)
-    plt.savefig(f'{outputdir}/Defunciones_en_exceso_SMOOTH_starton2020.pdf', bbox_inches='tight', dpi=300)
-
-    fig, ax = plt.subplots(3, 1, figsize=(figsize[0]+5, 9), sharex=True, gridspec_kw={'height_ratios': [5, 2, 2]})
-    #az.plot_hdi(mdates.date2num(humanweek.index), completecounterfactual.posterior_predictive["obs"], hdi_prob=0.5, smooth=True)
-    az.plot_hdi(mdates.date2num(humanweek.index), completecounterfactual.posterior_predictive["obs"], hdi_prob=0.95, smooth=True, smooth_kwargs={'window_length':11}, fill_kwargs={"label": "Modelo (95% Confianza)"}, color="C2", ax = ax[0])
-
-    ax[0].plot(humanweek.index, humanweek, label="Defunciones")
-    #format_x_axis(ax)
-    ax[0].set(title=TITULO)
-    ax[0].legend()
-    ax[0].set_ylim(ymin=0)
-    ax[0].set_ylabel('Defunciones semanales')
-
-    plot_xY95(humanweek.index, excess_deaths.transpose(..., "t"), ax[1], label='Exceso de defunciones')
-
-    ax[1].axhline(y=0, color="k")
-    ax[1].legend()
-    ax[1].set_ylabel('Defunciones semanales')
-
-    plot_xY95(humanweek.index, cumsum.transpose(..., "t"), ax[2], label='Exceso de defunciones acumulado')
-    ax[2].axhline(y=0, color="k")
-    ax[2].legend()
-    ax[2].set_ylabel('Defunciones')
-    ax[0].get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
-    ax[1].get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
-    ax[2].get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
-
-    plt.figtext(0.5, -0.01, NOTAS[0], ha="center", bbox={"facecolor":"lightgray", "alpha":0.5, "pad":5})
-    ax[0].set_xlim(xmin=datetime.datetime(2022, 1, 1, ))
-    ax[1].set_xlim(xmin=datetime.datetime(2022, 1, 1, ))
-    ax[2].set_xlim(xmin=datetime.datetime(2022, 1, 1, ))
-
-
-    img = imageio.v2.imread('https://i2.wp.com/dlab.cl/wp-content/uploads/2016/08/LogoWebDlab.png')
-
-    # put a new axes where you want the image to appear
-    # (x, y, width, height)
-    imax = fig.add_axes([0.40, 0.9, 0.25, 0.25])
-    # remove ticks & the box from imax 
-    imax.set_axis_off()
-    # print the logo with aspect="equal" to avoid distorting the logo
-    imax.imshow(img, aspect="equal")
-
-    plt.tight_layout()
-    #plt.savefig(f'{outputdir}/Defunciones_en_exceso_SMOOTH_starton2022.png', bbox_inches='tight', dpi=300)
-    plt.savefig(f'{outputdir}/Defunciones_en_exceso_SMOOTH_starton2022.pdf', bbox_inches='tight', dpi=300)
-
-
-    muertes_modeladas = completecounterfactual.posterior_predictive["obs"].quantile((0.05, 0.5, 0.95), dim=("chain", "draw")).transpose().to_pandas()
-    muertes_modeladas.index = humanweek.index
-    muertes_modeladas.columns = ['muertes_esperadas_HDI5%', 'muertes_esperadas_HDI50%', 'muertes_esperadas_HDI95%']
-    exceso = excess_deaths.quantile((0.05, 0.5, 0.95), dim=("chain", "draw")).transpose().to_pandas()
-    exceso.index = humanweek.index
-    exceso.columns = ['muertes_exceso_HDI5%', 'muertes_exceso_HDI50%', 'muertes_exceso_HDI95%']
-    excesocum = cumsum.quantile((0.05, 0.5, 0.95), dim=("chain", "draw")).transpose().to_pandas()
-    excesocum.index = humanweek.index
-    excesocum.columns = ['muertes_exceso_acumulado_HDI5%', 'muertes_exceso_acumulado_HDI50%', 'muertes_exceso_acumulado_HDI95%']
-    out = pd.DataFrame(humanweek, columns=['muertes_observadas'])
-    out = pd.concat([out, muertes_modeladas, exceso, excesocum], axis="columns")
-    out.reset_index().to_csv(f'{outcsvputdir}/defunciones_en_exceso.csv', index=False)
+    lastupdatedeis = open(f'{outputdir}/updatedeis', 'r').readlines()[0]
+    if lastupdatedeis.strip() != deis.index[-1].strftime('%d/%m/%Y'):
+        deis['EDAD_ANOS'] = deis.apply(annos, axis = 1)
+        deis['ANO_DEF'] = deis['ANO_DEF'].astype('int32')
+        bins = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 999]
+        bins_10s = [0, 10, 20, 30, 40, 50, 60, 70, 80, 999]
+        labels = ['00-04', '05-09', '10-14', '15-19', '20-24', '25-29', '30-34', '35-39', '40-44', '45-49', '50-54', '55-59', '60-64', '65-69', '70-74', '75-79', '80+']
+        labels_10s = ['00-09', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80+']
+        deis['agerange'] = pd.cut(deis.EDAD_ANOS, bins, labels=labels, include_lowest=True, right=False)
+        deis['agerange_10s'] = pd.cut(deis.EDAD_ANOS, bins_10s, labels=labels_10s, include_lowest=True, right=False)
+        # default figure sizes
+        figsize = (10, 5)
+
+        # create a list of month strings, for plotting purposes
+        month_strings = calendar.month_name[1:]
+
+        deis_gruped = pd.pivot_table(deis, values=['EDAD_CANT'], index=['FECHA_DEF'],
+                            columns=['GLOSA_SEXO', 'agerange_10s'], aggfunc='count')['EDAD_CANT'].resample('W-Mon').sum()
+        deis_prepandemia = pd.pivot_table(deis.loc[(deis['ANO_DEF'] <= 2019)], values=['EDAD_CANT'], index=['FECHA_DEF'],
+                            columns=['GLOSA_SEXO', 'agerange_10s'], aggfunc='count')['EDAD_CANT'].resample('W-Mon').sum()
+        deis_gruped = deis_gruped.sum(axis=1).iloc[1:-2]#.groupby(pd.Grouper(freq='W')).sum().iloc[1:-1]
+        deis_prepandemia = deis_prepandemia.sum(axis=1).iloc[1:-1]#.groupby(pd.Grouper(freq='W')).sum().iloc[1:-1]
+
+        sns.set(rc={'figure.figsize':(11.7,8.27)})
+
+
+
+        ## MODEL
+        with pm.Model(coords={"month": month_strings}) as model:
+
+            # observed predictors and outcome
+            month = pm.MutableData("month", deis_prepandemia.index.month.to_numpy(), dims='t')
+            time = pm.MutableData("time", np.array(list(range(len(deis_prepandemia)))), dims='t')
+            deaths = pm.MutableData("deaths", deis_prepandemia.to_numpy(), dims='t')
+            # priors
+            intercept = pm.Normal("intercept", 2200, 10)
+            month_mu = ZeroSumNormal("month mu", sigma=200, dims="month")
+            linear_trend = pm.TruncatedNormal("linear trend", 0, 0.1, lower=0)
+
+            # the actual linear model
+            mu = pm.Deterministic(
+                "mu",
+                intercept + (linear_trend * time) + month_mu[month - 1],
+            )
+            sigma = pm.HalfNormal("sigma", 1)
+            # likelihood
+            pm.TruncatedNormal("obs", mu=mu, sigma=sigma, lower=0, observed=deaths, dims='t')
+
+
+        with model:
+            idata = pm.sample(2000,tune=10000, random_seed=42)
+
+        with model:
+            pm.set_data(
+                {
+                    "month": deis_gruped.index.month.to_numpy(),
+                    "time": np.array(list(range(len(deis_gruped)))),
+                }
+            )
+            completecounterfactual = pm.sample_posterior_predictive(
+                idata, var_names=["obs"], random_seed=42
+            )
+
+        humanweek = deis_gruped.shift(-7, freq='D')
+
+        TITULO = "Exceso de mortalidad para todos los grupos etarios. Chile"
+
+        sns.set_context('paper', font_scale=1.5)
+
+        fig, ax = plt.subplots(3, 1, figsize=(figsize[0]+5, 9), sharex=True, gridspec_kw={'height_ratios': [5, 2, 2]})
+        #az.plot_hdi(mdates.date2num(humanweek.index), completecounterfactual.posterior_predictive["obs"], hdi_prob=0.5, smooth=True)
+        az.plot_hdi(mdates.date2num(humanweek.index), completecounterfactual.posterior_predictive["obs"], hdi_prob=0.95, smooth=False, smooth_kwargs={'window_length':11}, fill_kwargs={"label": "Modelo (95% Confianza)"}, color="C2", ax = ax[0])
+
+        ax[0].plot(humanweek.index, humanweek, label="Defunciones")
+        #format_x_axis(ax)
+        ax[0].set(title=TITULO)
+        ax[0].legend()
+        ax[0].set_ylim(ymin=0)
+        ax[0].set_ylabel('Defunciones semanales')
+
+        # convert deaths into an XArray object with a labelled dimension to help in the next step
+        deaths = xr.DataArray(humanweek.to_numpy(), dims=["t"])
+
+        # do the calculation by taking the difference
+        excess_deaths = deaths - completecounterfactual.posterior_predictive["obs"]
+        cumsum = excess_deaths.cumsum(dim="t")
+
+        thm = cumsum.transpose(..., "t").quantile((0.05,0.5,0.95), dim=("chain", "draw")).transpose()[-1].to_numpy()
+        thm2 = excess_deaths.transpose(..., "t").quantile((0.05,0.5,0.95), dim=("chain", "draw")).transpose()[-1].to_numpy()
+        NOTAS = [
+            f"Fuente deis.minsal.cl ({deis.index[-1].strftime('%d/%m/%Y')}); Ultima semana analizada {humanweek.index[-1].strftime('%d/%m/%Y')} — {humanweek.shift(7, freq='D').index[-1].strftime('%d/%m/%Y')}; Exceso semanal = {thm2[1]:,.0f} ({thm2[0]:,.0f} — {thm2[2]:,.0f}); Exceso total = {thm[1]:,.0f} ({thm[0]:,.0f} — {thm[2]:,.0f})",
+        ]
+        enTITULO = "Excess mortality for all age groups. Chile"
+
+        plot_xY95(humanweek.index, excess_deaths.transpose(..., "t"), ax[1], label='Exceso de defunciones')
+
+        ax[1].axhline(y=0, color="k")
+        ax[1].legend()
+        ax[1].set_ylabel('Defunciones semanales')
+
+        plot_xY95(humanweek.index, cumsum.transpose(..., "t"), ax[2], label='Exceso de defunciones acumulado')
+        ax[2].axhline(y=0, color="k")
+        ax[2].legend()
+        ax[2].set_ylabel('Defunciones')
+        ax[0].get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
+        ax[1].get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
+        ax[2].get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
+
+
+        plt.figtext(0.5, -0.01, NOTAS[0], ha="center", bbox={"facecolor":"lightgray", "alpha":0.5, "pad":5})
+        ax[0].set_xlim(xmin=datetime.datetime(2016, 1, 1, ))
+        ax[1].set_xlim(xmin=datetime.datetime(2016, 1, 1, ))
+        ax[2].set_xlim(xmin=datetime.datetime(2016, 1, 1, ))
+
+
+        img = imageio.v2.imread('https://i2.wp.com/dlab.cl/wp-content/uploads/2016/08/LogoWebDlab.png')
+
+        # put a new axes where you want the image to appear
+        # (x, y, width, height)
+        imax = fig.add_axes([0.40, 0.9, 0.25, 0.25])
+        # remove ticks & the box from imax 
+        imax.set_axis_off()
+        # print the logo with aspect="equal" to avoid distorting the logo
+        imax.imshow(img, aspect="equal")
+
+        plt.tight_layout()
+        #plt.savefig(f'{outputdir}/Defunciones_en_exceso.png', bbox_inches='tight', dpi=300)
+        plt.savefig(f'{outputdir}/Defunciones_en_exceso.pdf', bbox_inches='tight', dpi=300)
+
+
+        fig, ax = plt.subplots(3, 1, figsize=(figsize[0]+5, 9), sharex=True, gridspec_kw={'height_ratios': [5, 2, 2]})
+        #az.plot_hdi(mdates.date2num(humanweek.index), completecounterfactual.posterior_predictive["obs"], hdi_prob=0.5, smooth=True)
+        az.plot_hdi(mdates.date2num(humanweek.index), completecounterfactual.posterior_predictive["obs"], hdi_prob=0.95, smooth=True, smooth_kwargs={'window_length':11}, fill_kwargs={"label": "Modelo (95% Confianza)"}, color="C2", ax = ax[0])
+
+        ax[0].plot(humanweek.index, humanweek, label="Defunciones")
+        #format_x_axis(ax)
+        ax[0].set(title=TITULO)
+        ax[0].legend()
+        ax[0].set_ylim(ymin=0)
+        ax[0].set_ylabel('Defunciones semanales')
+
+        plot_xY95(humanweek.index, excess_deaths.transpose(..., "t"), ax[1], label='Exceso de defunciones')
+
+        ax[1].axhline(y=0, color="k")
+        ax[1].legend()
+        ax[1].set_ylabel('Defunciones semanales')
+
+        plot_xY95(humanweek.index, cumsum.transpose(..., "t"), ax[2], label='Exceso de defunciones acumulado')
+        ax[2].axhline(y=0, color="k")
+        ax[2].legend()
+        ax[2].set_ylabel('Defunciones')
+        ax[0].get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
+        ax[1].get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
+        ax[2].get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
+
+
+        plt.figtext(0.5, -0.01, NOTAS[0], ha="center", bbox={"facecolor":"lightgray", "alpha":0.5, "pad":5})
+        ax[0].set_xlim(xmin=datetime.datetime(2016, 1, 1, ))
+        ax[1].set_xlim(xmin=datetime.datetime(2016, 1, 1, ))
+        ax[2].set_xlim(xmin=datetime.datetime(2016, 1, 1, ))
+
+        # put a new axes where you want the image to appear
+        # (x, y, width, height)
+        imax = fig.add_axes([0.40, 0.9, 0.25, 0.25])
+        # remove ticks & the box from imax 
+        imax.set_axis_off()
+        # print the logo with aspect="equal" to avoid distorting the logo
+        imax.imshow(img, aspect="equal")
+
+        plt.tight_layout()
+        #plt.savefig(f'{outputdir}/Defunciones_en_exceso_SMOOTH.png', bbox_inches='tight', dpi=300)
+        plt.savefig(f'{outputdir}/Defunciones_en_exceso_SMOOTH.pdf', bbox_inches='tight', dpi=300)
+
+
+
+        fig, ax = plt.subplots(3, 1, figsize=(figsize[0]+5, 9), sharex=True, gridspec_kw={'height_ratios': [5, 2, 2]})
+        #az.plot_hdi(mdates.date2num(humanweek.index), completecounterfactual.posterior_predictive["obs"], hdi_prob=0.5, smooth=True)
+        az.plot_hdi(mdates.date2num(humanweek.index), completecounterfactual.posterior_predictive["obs"], hdi_prob=0.95, smooth=True, smooth_kwargs={'window_length':11}, fill_kwargs={"label": "Modelo (95% Confianza)"}, color="C2", ax = ax[0])
+
+        ax[0].plot(humanweek.index, humanweek, label="Defunciones")
+        #format_x_axis(ax)
+        ax[0].set(title=TITULO)
+        ax[0].legend()
+        ax[0].set_ylim(ymin=0)
+        ax[0].set_ylabel('Defunciones semanales')
+
+        plot_xY95(humanweek.index, excess_deaths.transpose(..., "t"), ax[1], label='Exceso de defunciones')
+
+        ax[1].axhline(y=0, color="k")
+        ax[1].legend()
+        ax[1].set_ylabel('Defunciones semanales')
+
+        plot_xY95(humanweek.index, cumsum.transpose(..., "t"), ax[2], label='Exceso de defunciones acumulado')
+        ax[2].axhline(y=0, color="k")
+        ax[2].legend()
+        ax[2].set_ylabel('Defunciones')
+        ax[0].get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
+        ax[1].get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
+        ax[2].get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
+
+        plt.figtext(0.5, -0.01, NOTAS[0], ha="center", bbox={"facecolor":"lightgray", "alpha":0.5, "pad":5})
+        ax[0].set_xlim(xmin=datetime.datetime(2020, 1, 1, ))
+        ax[1].set_xlim(xmin=datetime.datetime(2020, 1, 1, ))
+        ax[2].set_xlim(xmin=datetime.datetime(2020, 1, 1, ))
+
+
+        # put a new axes where you want the image to appear
+        # (x, y, width, height)
+        imax = fig.add_axes([0.40, 0.9, 0.25, 0.25])
+        # remove ticks & the box from imax 
+        imax.set_axis_off()
+        # print the logo with aspect="equal" to avoid distorting the logo
+        imax.imshow(img, aspect="equal")
+
+        plt.tight_layout()
+        #plt.savefig(f'{outputdir}/Defunciones_en_exceso_SMOOTH_starton2020.png', bbox_inches='tight', dpi=300)
+        plt.savefig(f'{outputdir}/Defunciones_en_exceso_SMOOTH_starton2020.pdf', bbox_inches='tight', dpi=300)
+
+        fig, ax = plt.subplots(3, 1, figsize=(figsize[0]+5, 9), sharex=True, gridspec_kw={'height_ratios': [5, 2, 2]})
+        #az.plot_hdi(mdates.date2num(humanweek.index), completecounterfactual.posterior_predictive["obs"], hdi_prob=0.5, smooth=True)
+        az.plot_hdi(mdates.date2num(humanweek.index), completecounterfactual.posterior_predictive["obs"], hdi_prob=0.95, smooth=True, smooth_kwargs={'window_length':11}, fill_kwargs={"label": "Modelo (95% Confianza)"}, color="C2", ax = ax[0])
+
+        ax[0].plot(humanweek.index, humanweek, label="Defunciones")
+        #format_x_axis(ax)
+        ax[0].set(title=TITULO)
+        ax[0].legend()
+        ax[0].set_ylim(ymin=0)
+        ax[0].set_ylabel('Defunciones semanales')
+
+        plot_xY95(humanweek.index, excess_deaths.transpose(..., "t"), ax[1], label='Exceso de defunciones')
+
+        ax[1].axhline(y=0, color="k")
+        ax[1].legend()
+        ax[1].set_ylabel('Defunciones semanales')
+
+        plot_xY95(humanweek.index, cumsum.transpose(..., "t"), ax[2], label='Exceso de defunciones acumulado')
+        ax[2].axhline(y=0, color="k")
+        ax[2].legend()
+        ax[2].set_ylabel('Defunciones')
+        ax[0].get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
+        ax[1].get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
+        ax[2].get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
+
+        plt.figtext(0.5, -0.01, NOTAS[0], ha="center", bbox={"facecolor":"lightgray", "alpha":0.5, "pad":5})
+        ax[0].set_xlim(xmin=datetime.datetime(2022, 1, 1, ))
+        ax[1].set_xlim(xmin=datetime.datetime(2022, 1, 1, ))
+        ax[2].set_xlim(xmin=datetime.datetime(2022, 1, 1, ))
+
+
+        # put a new axes where you want the image to appear
+        # (x, y, width, height)
+        imax = fig.add_axes([0.40, 0.9, 0.25, 0.25])
+        # remove ticks & the box from imax 
+        imax.set_axis_off()
+        # print the logo with aspect="equal" to avoid distorting the logo
+        imax.imshow(img, aspect="equal")
+
+        plt.tight_layout()
+        #plt.savefig(f'{outputdir}/Defunciones_en_exceso_SMOOTH_starton2022.png', bbox_inches='tight', dpi=300)
+        plt.savefig(f'{outputdir}/Defunciones_en_exceso_SMOOTH_starton2022.pdf', bbox_inches='tight', dpi=300)
+
+
+        muertes_modeladas = completecounterfactual.posterior_predictive["obs"].quantile((0.05, 0.5, 0.95), dim=("chain", "draw")).transpose().to_pandas()
+        muertes_modeladas.index = humanweek.index
+        muertes_modeladas.columns = ['muertes_esperadas_HDI5%', 'muertes_esperadas_HDI50%', 'muertes_esperadas_HDI95%']
+        exceso = excess_deaths.quantile((0.05, 0.5, 0.95), dim=("chain", "draw")).transpose().to_pandas()
+        exceso.index = humanweek.index
+        exceso.columns = ['muertes_exceso_HDI5%', 'muertes_exceso_HDI50%', 'muertes_exceso_HDI95%']
+        excesocum = cumsum.quantile((0.05, 0.5, 0.95), dim=("chain", "draw")).transpose().to_pandas()
+        excesocum.index = humanweek.index
+        excesocum.columns = ['muertes_exceso_acumulado_HDI5%', 'muertes_exceso_acumulado_HDI50%', 'muertes_exceso_acumulado_HDI95%']
+        out = pd.DataFrame(humanweek, columns=['muertes_observadas'])
+        out = pd.concat([out, muertes_modeladas, exceso, excesocum], axis="columns")
+        out.reset_index().to_csv(f'{outcsvputdir}/defunciones_en_exceso.csv', index=False)
+        print(f"{deis.index[-1].strftime('%d/%m/%Y')}", file=open(f'{outputdir}/updatedeis', 'w'))
+    else:
+        print(f'Deis updated: {lastupdatedeis}')

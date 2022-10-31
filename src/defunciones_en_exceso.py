@@ -200,7 +200,7 @@ if __name__ == "__main__":
 
 
         with model:
-            idata = pm.sample(2000,tune=10000, random_seed=42)
+            idata = pm.sample(2000,tune=10000, chains=4, random_seed=42)
 
         with model:
             pm.set_data(

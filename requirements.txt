@@ -5,3 +5,4 @@ plotly
 pathlib
 scipy
 pymc
+seaborn

@@ -148,19 +148,19 @@ if __name__ == "__main__":
     deis = pd.read_csv(deis_csv, sep=';', parse_dates=[1], index_col=False, encoding='latin-1')
     deis.set_index(['FECHA_DEF'], inplace=True)
     deis.sort_index(inplace=True)
+    deis['EDAD_ANOS'] = deis.apply(annos, axis = 1)
+    deis['AÑO'] = deis['AÑO'].astype('int32')
+    bins = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 999]
+    bins_10s = [0, 10, 20, 30, 40, 50, 60, 70, 80, 999]
+    labels = ['00-04', '05-09', '10-14', '15-19', '20-24', '25-29', '30-34', '35-39', '40-44', '45-49', '50-54', '55-59', '60-64', '65-69', '70-74', '75-79', '80+']
+    labels_10s = ['00-09', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80+']
+    deis['agerange'] = pd.cut(deis.EDAD_ANOS, bins, labels=labels, include_lowest=True, right=False)
+    deis['agerange_10s'] = pd.cut(deis.EDAD_ANOS, bins_10s, labels=labels_10s, include_lowest=True, right=False)
+    deis = deis[deis.index.notnull()]
     # CODIGO_CATEGORIA_DIAG1 U07 > covid19
     rmtree(deis_data)
     lastupdatedeis = open(f'{outputdir}/updatedeis.log', 'r').readlines()[0]
     if lastupdatedeis.strip() != deis.index[-1].strftime('%d/%m/%Y'):
-        deis['EDAD_ANOS'] = deis.apply(annos, axis = 1)
-        deis['AÑO'] = deis['AÑO'].astype('int32')
-        bins = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 999]
-        bins_10s = [0, 10, 20, 30, 40, 50, 60, 70, 80, 999]
-        labels = ['00-04', '05-09', '10-14', '15-19', '20-24', '25-29', '30-34', '35-39', '40-44', '45-49', '50-54', '55-59', '60-64', '65-69', '70-74', '75-79', '80+']
-        labels_10s = ['00-09', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80+']
-        deis['agerange'] = pd.cut(deis.EDAD_ANOS, bins, labels=labels, include_lowest=True, right=False)
-        deis['agerange_10s'] = pd.cut(deis.EDAD_ANOS, bins_10s, labels=labels_10s, include_lowest=True, right=False)
-        deis = deis[deis.index.notnull()]
         # default figure sizes
         figsize = (10, 5)
 

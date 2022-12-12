@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import urllib.request
 from zipfile import ZipFile
+from rarfile import RarFile
 from re import compile
 from pathlib import Path
 from shutil import rmtree
@@ -23,17 +24,16 @@ import matplotlib
 import datetime
 import imageio
 
-
 def get_deis_death_url():
-    datapattern = compile('http.*DEFUNCIONES_FUENTE_DEIS.*zip\"\\n\"tags\":\"defunciones\"')
+    datapattern = compile('http.*DEFUNCIONES_FUENTE_DEIS.*rar\",\"tags\":\"defunciones\"')
     with urllib.request.urlopen('https://deis.minsal.cl/wp-admin/admin-ajax.php?action=wp_ajax_ninja_tables_public_action&table_id=2889&target_action=get-all-data&default_sorting=manual_sort') as f:
         return datapattern.search(f.read().decode().replace(',','\n')).group().replace('\\', '').split('"')[0]
 
 def get_csv_deis():
     url = get_deis_death_url()
     urllib.request.urlretrieve(url, 'deis_data/' + url.split('/')[-1])
-    with ZipFile('deis_data/' + url.split('/')[-1], 'r') as zip_ref:
-        zip_ref.extractall('deis_data')
+    with RarFile('deis_data/' + url.split('/')[-1], 'r') as rar_ref:
+        rar_ref.extractall('deis_data')
     return url.split('/')[-1][:-3]
 
 def annos(row):

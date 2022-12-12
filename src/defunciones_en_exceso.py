@@ -25,7 +25,7 @@ import datetime
 import imageio
 
 def get_deis_death_url():
-    datapattern = compile('http.*DEFUNCIONES_FUENTE_DEIS.*rar\",\"tags\":\"defunciones\"')
+    datapattern = compile('http.*DEFUNCIONES_FUENTE_DEIS.*rar\"\\n\"tags\":\"defunciones\"')
     with urllib.request.urlopen('https://deis.minsal.cl/wp-admin/admin-ajax.php?action=wp_ajax_ninja_tables_public_action&table_id=2889&target_action=get-all-data&default_sorting=manual_sort') as f:
         return datapattern.search(f.read().decode().replace(',','\n')).group().replace('\\', '').split('"')[0]
 

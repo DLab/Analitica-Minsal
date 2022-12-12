@@ -7,3 +7,4 @@ scipy
 pymc
 seaborn
 imageio
+rarfile

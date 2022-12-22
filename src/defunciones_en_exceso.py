@@ -5,7 +5,6 @@ import pandas as pd
 import numpy as np
 import urllib.request
 from zipfile import ZipFile
-from rarfile import RarFile
 from re import compile
 from pathlib import Path
 from shutil import rmtree

@@ -140,6 +140,7 @@ if __name__ == "__main__":
     outcsvputdir = repo_dir/'csv_output'
 
     outputdir.mkdir(parents=True, exist_ok=True)
+    get_csv_deis()
     to_csv = Path('deis_data')
     deis_csv = list(to_csv.glob('*.csv'))[0]
     #deis_csv = 'deis_data/' + get_csv_deis() + 'csv'

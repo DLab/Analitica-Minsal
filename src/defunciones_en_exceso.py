@@ -140,15 +140,17 @@ if __name__ == "__main__":
     outcsvputdir = repo_dir/'csv_output'
 
     outputdir.mkdir(parents=True, exist_ok=True)
-    deis_data = Path('deis_data')
-    deis_data.mkdir(parents=True, exist_ok=True)
-    deis_csv = 'deis_data/' + get_csv_deis() + 'csv'
-    #columnas = ['ANO_DEF', 'FECHA_DEF', 'GLOSA_SEXO', 'EDAD_TIPO', 'EDAD_CANT', 'CODIGO_COMUNA_RESIDENCIA', 'GLOSA_COMUNA_RESIDENCIA', 'GLOSA_REG_RES', 'DIAG1', 'CAPITULO_DIAG1', 'GLOSA_CAPITULO_DIAG1', 'CODIGO_GRUPO_DIAG1', 'GLOSA_GRUPO_DIAG1', 'CODIGO_CATEGORIA_DIAG1', 'GLOSA_CATEGORIA_DIAG1', 'CODIGO_SUBCATEGORIA_DIAG1', 'GLOSA_SUBCATEGORIA_DIAG1', 'DIAG2', 'CAPITULO_DIAG2', 'GLOSA_CAPITULO_DIAG2', 'CODIGO_GRUPO_DIAG2', 'GLOSA_GRUPO_DIAG2', 'CODIGO_CATEGORIA_DIAG2', 'GLOSA_CATEGORIA_DIAG2', 'CODIGO_SUBCATEGORIA_DIAG2', 'GLOSA_SUBCATEGORIA_DIAG2']
-    deis = pd.read_csv(deis_csv, sep=';', parse_dates=[1], index_col=False, encoding='latin-1')
+    to_csv = Path('deis_data')
+    deis_csv = list(to_csv.glob('*.csv'))[0]
+    #deis_csv = 'deis_data/' + get_csv_deis() + 'csv'
+    columnas = ['ANO_DEF', 'FECHA_DEF', 'GLOSA_SEXO', 'EDAD_TIPO', 'EDAD_CANT', 'CODIGO_COMUNA_RESIDENCIA', 'GLOSA_COMUNA_RESIDENCIA', 'GLOSA_REG_RES', 'DIAG1', 'CAPITULO_DIAG1', 'GLOSA_CAPITULO_DIAG1', 'CODIGO_GRUPO_DIAG1', 'GLOSA_GRUPO_DIAG1', 'CODIGO_CATEGORIA_DIAG1', 'GLOSA_CATEGORIA_DIAG1', 'CODIGO_SUBCATEGORIA_DIAG1', 'GLOSA_SUBCATEGORIA_DIAG1', 'DIAG2', 'CAPITULO_DIAG2', 'GLOSA_CAPITULO_DIAG2', 'CODIGO_GRUPO_DIAG2', 'GLOSA_GRUPO_DIAG2', 'CODIGO_CATEGORIA_DIAG2', 'GLOSA_CATEGORIA_DIAG2', 'CODIGO_SUBCATEGORIA_DIAG2', 'GLOSA_SUBCATEGORIA_DIAG2', 'LUGAR_DEFUNCION']
+    deis = pd.read_csv(deis_csv, sep=';', parse_dates=[1], index_col=False, encoding='latin-1', header=None, names=columnas)
     deis.set_index(['FECHA_DEF'], inplace=True)
     deis.sort_index(inplace=True)
+    # CODIGO_CATEGORIA_DIAG1 U07 > covid19
+    rmtree(deis_data)
     deis['EDAD_ANOS'] = deis.apply(annos, axis = 1)
-    deis['AÑO'] = deis['AÑO'].astype('int32')
+    deis['ANO_DEF'] = deis['ANO_DEF'].astype('int32')
     bins = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 999]
     bins_10s = [0, 10, 20, 30, 40, 50, 60, 70, 80, 999]
     labels = ['00-04', '05-09', '10-14', '15-19', '20-24', '25-29', '30-34', '35-39', '40-44', '45-49', '50-54', '55-59', '60-64', '65-69', '70-74', '75-79', '80+']

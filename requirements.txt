@@ -5,6 +5,7 @@ plotly
 pathlib
 scipy
 pymc
+aesara
 seaborn
 imageio
 rarfile

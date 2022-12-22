@@ -8,4 +8,3 @@ pymc
 aesara
 seaborn
 imageio
-rarfile

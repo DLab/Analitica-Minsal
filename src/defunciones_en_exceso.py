@@ -140,8 +140,9 @@ if __name__ == "__main__":
     outcsvputdir = repo_dir/'csv_output'
 
     outputdir.mkdir(parents=True, exist_ok=True)
-    get_csv_deis()
     to_csv = Path('deis_data')
+    to_csv.mkdir(parents=True, exist_ok=True)
+    get_csv_deis()
     deis_csv = list(to_csv.glob('*.csv'))[0]
     #deis_csv = 'deis_data/' + get_csv_deis() + 'csv'
     columnas = ['ANO_DEF', 'FECHA_DEF', 'GLOSA_SEXO', 'EDAD_TIPO', 'EDAD_CANT', 'CODIGO_COMUNA_RESIDENCIA', 'GLOSA_COMUNA_RESIDENCIA', 'GLOSA_REG_RES', 'DIAG1', 'CAPITULO_DIAG1', 'GLOSA_CAPITULO_DIAG1', 'CODIGO_GRUPO_DIAG1', 'GLOSA_GRUPO_DIAG1', 'CODIGO_CATEGORIA_DIAG1', 'GLOSA_CATEGORIA_DIAG1', 'CODIGO_SUBCATEGORIA_DIAG1', 'GLOSA_SUBCATEGORIA_DIAG1', 'DIAG2', 'CAPITULO_DIAG2', 'GLOSA_CAPITULO_DIAG2', 'CODIGO_GRUPO_DIAG2', 'GLOSA_GRUPO_DIAG2', 'CODIGO_CATEGORIA_DIAG2', 'GLOSA_CATEGORIA_DIAG2', 'CODIGO_SUBCATEGORIA_DIAG2', 'GLOSA_SUBCATEGORIA_DIAG2', 'LUGAR_DEFUNCION']
@@ -149,7 +150,6 @@ if __name__ == "__main__":
     deis.set_index(['FECHA_DEF'], inplace=True)
     deis.sort_index(inplace=True)
     # CODIGO_CATEGORIA_DIAG1 U07 > covid19
-    rmtree(deis_data)
     deis['EDAD_ANOS'] = deis.apply(annos, axis = 1)
     deis['ANO_DEF'] = deis['ANO_DEF'].astype('int32')
     bins = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 999]
@@ -160,7 +160,7 @@ if __name__ == "__main__":
     deis['agerange_10s'] = pd.cut(deis.EDAD_ANOS, bins_10s, labels=labels_10s, include_lowest=True, right=False)
     deis = deis[deis.index.notnull()]
     # CODIGO_CATEGORIA_DIAG1 U07 > covid19
-    rmtree(deis_data)
+    rmtree(to_csv)
     lastupdatedeis = open(f'{outputdir}/updatedeis.log', 'r').readlines()[0]
     if lastupdatedeis.strip() != deis.index[-1].strftime('%d/%m/%Y'):
         # default figure sizes
@@ -169,10 +169,10 @@ if __name__ == "__main__":
         # create a list of month strings, for plotting purposes
         month_strings = calendar.month_name[1:]
 
-        deis_gruped = pd.pivot_table(deis.loc[(deis['AÑO'] >= 2000)], values=['EDAD_CANT'], index=['FECHA_DEF'],
-                            columns=['SEXO_NOMBRE', 'agerange_10s'], aggfunc='count')['EDAD_CANT'].resample('W-Mon').sum()
-        deis_prepandemia = pd.pivot_table(deis.loc[(deis['AÑO'] <= 2019) & (deis['AÑO'] >= 2000)], values=['EDAD_CANT'], index=['FECHA_DEF'],
-                            columns=['SEXO_NOMBRE', 'agerange_10s'], aggfunc='count')['EDAD_CANT'].resample('W-Mon').sum()
+        deis_gruped = pd.pivot_table(deis.loc[(deis['ANO_DEF'] >= 2000)], values=['EDAD_CANT'], index=['FECHA_DEF'],
+                            columns=['GLOSA_SEXO', 'agerange_10s'], aggfunc='count')['EDAD_CANT'].resample('W-Mon').sum()
+        deis_prepandemia = pd.pivot_table(deis.loc[(deis['ANO_DEF'] <= 2019) & (deis['ANO_DEF'] >= 2000)], values=['EDAD_CANT'], index=['FECHA_DEF'],
+                            columns=['GLOSA_SEXO', 'agerange_10s'], aggfunc='count')['EDAD_CANT'].resample('W-Mon').sum()
         deis_gruped = deis_gruped.sum(axis=1).iloc[1:-2]#.groupby(pd.Grouper(freq='W')).sum().iloc[1:-1]
         deis_prepandemia = deis_prepandemia.sum(axis=1).iloc[1:-1]#.groupby(pd.Grouper(freq='W')).sum().iloc[1:-1]
 

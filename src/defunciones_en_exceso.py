@@ -10,7 +10,7 @@ from pathlib import Path
 from shutil import rmtree
 import calendar
 import os
-import aesara.tensor as at
+import pytensor.tensor as at
 import arviz as az
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt

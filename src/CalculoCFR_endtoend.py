@@ -16,15 +16,15 @@ deis_data = repo_dir/'deis_data'
 deis_data.mkdir(parents=True, exist_ok=True)
 
 def get_deis_death_url():
-    datapattern = compile('http.*DEFUNCIONES_FUENTE_DEIS_2016_2022.*zip')
+    datapattern = compile('http.*DEFUNCIONES_FUENTE_DEIS.*zip\"\\n\"tags\":\"defunciones\"')
     with urllib.request.urlopen('https://deis.minsal.cl/wp-admin/admin-ajax.php?action=wp_ajax_ninja_tables_public_action&table_id=2889&target_action=get-all-data&default_sorting=manual_sort') as f:
-        return datapattern.search(f.read().decode().replace(',','\n')).group().replace('\\', '')
+        return datapattern.search(f.read().decode().replace(',','\n')).group().replace('\\', '').split('"')[0]
 
 def get_csv_deis():
     url = get_deis_death_url()
     urllib.request.urlretrieve(url, 'deis_data/' + url.split('/')[-1])
-    with ZipFile('deis_data/' + url.split('/')[-1], 'r') as zip_ref:
-        zip_ref.extractall('deis_data')
+    with ZipFile('deis_data/' + url.split('/')[-1], 'r') as rar_ref:
+        rar_ref.extractall('deis_data')
     return url.split('/')[-1][:-3]
 
 def annos(row):
@@ -53,7 +53,7 @@ piramide = {
     '70-79': 1_046_294,
     '>=80': 568_070,
 }
-columnas = ['ANO_DEF', 'FECHA_DEF', 'GLOSA_SEXO', 'EDAD_TIPO', 'EDAD_CANT', 'CODIGO_COMUNA_RESIDENCIA', 'GLOSA_COMUNA_RESIDENCIA', 'GLOSA_REG_RES', 'DIAG1', 'CAPITULO_DIAG1', 'GLOSA_CAPITULO_DIAG1', 'CODIGO_GRUPO_DIAG1', 'GLOSA_GRUPO_DIAG1', 'CODIGO_CATEGORIA_DIAG1', 'GLOSA_CATEGORIA_DIAG1', 'CODIGO_SUBCATEGORIA_DIAG1', 'GLOSA_SUBCATEGORIA_DIAG1', 'DIAG2', 'CAPITULO_DIAG2', 'GLOSA_CAPITULO_DIAG2', 'CODIGO_GRUPO_DIAG2', 'GLOSA_GRUPO_DIAG2', 'CODIGO_CATEGORIA_DIAG2', 'GLOSA_CATEGORIA_DIAG2', 'CODIGO_SUBCATEGORIA_DIAG2', 'GLOSA_SUBCATEGORIA_DIAG2']
+columnas = ['ANO_DEF', 'FECHA_DEF', 'GLOSA_SEXO', 'EDAD_TIPO', 'EDAD_CANT', 'CODIGO_COMUNA_RESIDENCIA', 'GLOSA_COMUNA_RESIDENCIA', 'GLOSA_REG_RES', 'DIAG1', 'CAPITULO_DIAG1', 'GLOSA_CAPITULO_DIAG1', 'CODIGO_GRUPO_DIAG1', 'GLOSA_GRUPO_DIAG1', 'CODIGO_CATEGORIA_DIAG1', 'GLOSA_CATEGORIA_DIAG1', 'CODIGO_SUBCATEGORIA_DIAG1', 'GLOSA_SUBCATEGORIA_DIAG1', 'DIAG2', 'CAPITULO_DIAG2', 'GLOSA_CAPITULO_DIAG2', 'CODIGO_GRUPO_DIAG2', 'GLOSA_GRUPO_DIAG2', 'CODIGO_CATEGORIA_DIAG2', 'GLOSA_CATEGORIA_DIAG2', 'CODIGO_SUBCATEGORIA_DIAG2', 'GLOSA_SUBCATEGORIA_DIAG2', 'LUGAR_DEFUNCION']
 deis = pd.read_csv(deis_csv, sep=';', parse_dates=[1], header=None, names=columnas, index_col=False, encoding='latin-1')
 deis.set_index(['FECHA_DEF'], inplace=True)
 deis.sort_index(inplace=True)

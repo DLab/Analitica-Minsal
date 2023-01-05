@@ -25,7 +25,7 @@ def get_csv_deis():
         rar_ref.extractall('deis_data')
     return url.split('/')[-1][:-3]
 
-deis_csv = 'deis_data/' + get_csv_deis() + '.csv'
+deis_csv = 'deis_data/' + get_csv_deis() + 'csv'
 print(f'deis_data/{get_csv_deis()}.zip')
 
 print(deis_csv)

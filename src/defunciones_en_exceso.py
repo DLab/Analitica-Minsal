@@ -23,17 +23,22 @@ import matplotlib
 import datetime
 import imageio
 
-def get_deis_death_url():
+def get_deis_death_urls():
+    urls = []
     datapattern = compile('http.*DEFUNCIONES_FUENTE_DEIS.*zip\"\\n\"tags\":\"defunciones\"')
     with urllib.request.urlopen('https://deis.minsal.cl/wp-admin/admin-ajax.php?action=wp_ajax_ninja_tables_public_action&table_id=2889&target_action=get-all-data&default_sorting=manual_sort') as f:
-        return datapattern.search(f.read().decode().replace(',','\n')).group().replace('\\', '').split('"')[0]
+        for match in datapattern.finditer(f.read().decode().replace(',','\n')):
+            url = match.group().replace('\\', '').split('"')[0]
+            urls.append(url)
+    return urls
 
 def get_csv_deis():
-    url = get_deis_death_url()
-    urllib.request.urlretrieve(url, 'deis_data/' + url.split('/')[-1])
-    with ZipFile('deis_data/' + url.split('/')[-1], 'r') as rar_ref:
-        rar_ref.extractall('deis_data')
-    return url.split('/')[-1][:-3]
+    urls = get_deis_death_urls()
+    for url in urls:
+        urllib.request.urlretrieve(url, 'deis_data/' + url.split('/')[-1])
+        with ZipFile('deis_data/' + url.split('/')[-1], 'r') as rar_ref:
+            rar_ref.extractall('deis_data')
+    return urls
 
 def annos(row):
     edad = row['EDAD_CANT']
@@ -143,15 +148,18 @@ if __name__ == "__main__":
     to_csv = Path('deis_data')
     to_csv.mkdir(parents=True, exist_ok=True)
     get_csv_deis()
-    deis_csv = list(to_csv.glob('*.csv'))[0]
-    #deis_csv = 'deis_data/' + get_csv_deis() + 'csv'
     columnas = ['ANO_DEF', 'FECHA_DEF', 'GLOSA_SEXO', 'EDAD_TIPO', 'EDAD_CANT', 'CODIGO_COMUNA_RESIDENCIA', 'GLOSA_COMUNA_RESIDENCIA', 'GLOSA_REG_RES', 'DIAG1', 'CAPITULO_DIAG1', 'GLOSA_CAPITULO_DIAG1', 'CODIGO_GRUPO_DIAG1', 'GLOSA_GRUPO_DIAG1', 'CODIGO_CATEGORIA_DIAG1', 'GLOSA_CATEGORIA_DIAG1', 'CODIGO_SUBCATEGORIA_DIAG1', 'GLOSA_SUBCATEGORIA_DIAG1', 'DIAG2', 'CAPITULO_DIAG2', 'GLOSA_CAPITULO_DIAG2', 'CODIGO_GRUPO_DIAG2', 'GLOSA_GRUPO_DIAG2', 'CODIGO_CATEGORIA_DIAG2', 'GLOSA_CATEGORIA_DIAG2', 'CODIGO_SUBCATEGORIA_DIAG2', 'GLOSA_SUBCATEGORIA_DIAG2', 'LUGAR_DEFUNCION']
-    deis = pd.read_csv(deis_csv, sep=';', parse_dates=[1], index_col=False, encoding='latin-1', header=None, names=columnas)
+    deis_csv = to_csv.glob('*.csv')
+    df_list = []
+    for csv_file in deis_csv:
+        df = pd.read_csv(csv_file, sep=';', parse_dates=[1], index_col=False, encoding='latin-1', header=None, names=columnas)
+        df_list.append(df)
+    deis = pd.concat(df_list, ignore_index=True)
     deis.set_index(['FECHA_DEF'], inplace=True)
     deis.sort_index(inplace=True)
     # CODIGO_CATEGORIA_DIAG1 U07 > covid19
     deis['EDAD_ANOS'] = deis.apply(annos, axis = 1)
-    deis['ANO_DEF'] = deis['ANO_DEF'].astype('int32')
+    deis['ANO_DEF'] = pd.to_numeric(deis['ANO_DEF'], errors='coerce')
     bins = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 999]
     bins_10s = [0, 10, 20, 30, 40, 50, 60, 70, 80, 999]
     labels = ['00-04', '05-09', '10-14', '15-19', '20-24', '25-29', '30-34', '35-39', '40-44', '45-49', '50-54', '55-59', '60-64', '65-69', '70-74', '75-79', '80+']
